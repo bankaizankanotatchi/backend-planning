@@ -1,0 +1,255 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum EnumJour {
+  LUNDI
+  MARDI
+  MERCREDI
+  JEUDI
+  VENDREDI
+  SAMEDI
+  DIMANCHE
+}
+
+enum EnumContrat {
+  CDI
+  CDD
+  INTERIM
+}
+
+enum EnumRole {
+  EMPLOYE_BASE
+  MANAGER
+  ADMIN
+}
+
+enum EnumStatutTache {
+  A_FAIRE
+  EN_COURS
+  TERMINEE
+  VALIDEE
+  ANNULEE
+}
+
+enum StatutNotification {
+  ENVOYEE
+  LUE
+  ARCHIVEE
+}
+
+enum StatutValidation {
+  BROUILLON
+  VALIDE
+  REJETE
+  ANNULE
+}
+
+enum StatutDemande {
+  EN_ATTENTE
+  VALIDE
+  REJETEE
+  ANNULEE
+}
+
+enum TypeConge {
+  ANNUEL
+  MALADIE
+  PARENTAL
+  SANS_SOLDE
+}
+
+enum TypeCreneau {
+  TRAVAIL
+  FORMATION
+  REUNION
+}
+
+enum EnumPermission {
+  PLANNING_READ
+  PLANNING_CREATE
+  PLANNING_UPDATE
+  PLANNING_DELETE
+  PLANNING_PUBLISH
+  PLANNING_OVERRIDE
+  LEAVE_REQUEST
+  LEAVE_APPROVE
+  LEAVE_MANAGE_TYPES
+  LEAVE_VIEW_TEAM
+  EMPLOYEE_READ
+  EMPLOYEE_EDIT
+  EMPLOYEE_MANAGE_CONTRACTS
+  EMPLOYEE_MANAGE_SKILLS
+  TEAM_ASSIGN
+  TEAM_MANAGE
+  TEAM_VIEW_STATS
+  CONFIG_UPDATE
+  ROLE_MANAGE
+  PERMISSION_MANAGE
+  SYSTEM_BACKUP
+  ALL_ACCESS
+}
+
+model Poste {
+  id          Int        @id @default(autoincrement())
+  nom         String     @unique
+  description String?
+  employees   Employee[]
+}
+
+model Employee {
+  id               Int                  @id @default(autoincrement())
+  nom              String
+  prenom           String
+  email            String               @unique
+  posteId          Int?
+  telephone        String?
+  adresse          String?
+  role             EnumRole
+  dateEmbauche     DateTime
+  dateFin          DateTime?
+  permissions      EmployeePermission[]
+  contrats         Contrat[]
+  disponibilites   Disponibilite[]
+  conges           Conge[]
+  rapportsEmploye  Rapport[]            @relation("RapportEmploye")
+  rapportsCreateur Rapport[]            @relation("RapportCreateur")
+  notifications    Notification[]
+  plannings        Planning[]
+  taches           Tache[]
+  creneaux         Creneau[]
+  postes           Poste[]
+  syntheses        SyntheseHeures[] // Relation ajoutée
+}
+
+model EmployeePermission {
+  id         Int            @id @default(autoincrement())
+  employee   Employee?      @relation(fields: [employeeId], references: [id]) // Rendue optionnelle
+  employeeId Int?
+  permission EnumPermission
+
+  @@unique([employeeId, permission])
+  @@index([employeeId])
+}
+
+model SyntheseHeures {
+  id                    Int              @id @default(autoincrement())
+  employee              Employee         @relation(fields: [employeeId], references: [id])
+  employeeId            Int
+  periodeFrom           DateTime
+  periodeTo             DateTime
+  heuresNormales        Int
+  heuresSupplementaires Int
+  statut                StatutValidation @default(BROUILLON)
+  planning              Planning         @relation(fields: [planningId], references: [id])
+  planningId            Int
+}
+
+model Planning {
+  id           Int              @id @default(autoincrement())
+  nom          String
+  createur     Employee         @relation(fields: [createurId], references: [id])
+  createurId   Int
+  dateCreation DateTime         @default(now())
+  periode      DateRange        @relation(fields: [dateRangeId], references: [id])
+  dateRangeId  Int
+  statut       StatutValidation @default(BROUILLON)
+  creneaux     Creneau[]
+  syntheses    SyntheseHeures[]
+}
+
+model Creneau {
+  id          Int             @id @default(autoincrement())
+  dateDebut   DateTime
+  dateFin     DateTime
+  type        TypeCreneau
+  employee    Employee        @relation(fields: [employeeId], references: [id])
+  employeeId  Int
+  valide      Boolean         @default(false)
+  statutTache EnumStatutTache @default(A_FAIRE)
+  duree       Int // en minutes
+  commentaire String?
+  tache       Tache           @relation(fields: [tacheId], references: [id])
+  tacheId     Int
+  planning    Planning        @relation(fields: [planningId], references: [id])
+  planningId  Int
+}
+
+model Tache {
+  id             Int             @id @default(autoincrement())
+  label          String
+  description    String
+  dateLimite     DateTime
+  statut         EnumStatutTache @default(A_FAIRE)
+  dateCompletion DateTime?
+  employee       Employee        @relation(fields: [employeeId], references: [id])
+  employeeId     Int
+  creneaux       Creneau[]
+}
+
+model DateRange {
+  id        Int        @id @default(autoincrement())
+  debut     DateTime
+  fin       DateTime
+  plannings Planning[]
+}
+
+model Notification {
+  id             Int                @id @default(autoincrement())
+  destinataire   Employee           @relation(fields: [destinataireId], references: [id])
+  destinataireId Int
+  message        String
+  date           DateTime           @default(now())
+  statut         StatutNotification @default(ENVOYEE)
+}
+
+model Rapport {
+  id           Int              @id @default(autoincrement())
+  employe      Employee         @relation("RapportEmploye", fields: [employeId], references: [id])
+  employeId    Int
+  createur     Employee         @relation("RapportCreateur", fields: [createurId], references: [id])
+  createurId   Int
+  dateCreation DateTime         @default(now())
+  type         String
+  statut       StatutValidation @default(BROUILLON)
+
+  @@index([employeId])
+  @@index([createurId])
+}
+
+model Conge {
+  id         Int           @id @default(autoincrement())
+  employee   Employee      @relation(fields: [employeeId], references: [id])
+  employeeId Int
+  type       TypeConge
+  dateDebut  DateTime
+  dateFin    DateTime
+  statut     StatutDemande @default(EN_ATTENTE)
+}
+
+model Disponibilite {
+  id         Int      @id @default(autoincrement())
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  employeeId Int
+  jour       EnumJour
+  heureDebut DateTime
+  heureFin   DateTime
+}
+
+model Contrat {
+  id         Int         @id @default(autoincrement())
+  employee   Employee    @relation(fields: [employeeId], references: [id])
+  employeeId Int
+  type       EnumContrat
+  dateDebut  DateTime
+  dateFin    DateTime?
+}

@@ -1,0 +1,290 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // provider = "sqlite"
+  // url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_DIRECT")
+}
+
+enum EnumJour {
+  LUNDI
+  MARDI
+  MERCREDI
+  JEUDI
+  VENDREDI
+  SAMEDI
+  DIMANCHE
+}
+
+enum EnumContrat {
+  CDI
+  CDD
+  INTERIM
+}
+
+enum EnumRole {
+  EMPLOYE_BASE
+  MANAGER
+  ADMIN
+}
+
+enum EnumStatutTache {
+  A_FAIRE
+  EN_COURS
+  TERMINEE
+  VALIDEE
+  ANNULEE
+}
+
+enum StatutNotification {
+  ENVOYEE
+  LUE
+  ARCHIVEE
+}
+
+enum StatutValidation {
+  BROUILLON
+  VALIDE
+  REJETE
+  ANNULE
+}
+
+enum StatutDemande {
+  EN_ATTENTE
+  VALIDE
+  REJETEE
+  ANNULEE
+}
+
+enum TypeConge {
+  ANNUEL
+  MALADIE
+  PARENTAL
+  SANS_SOLDE
+}
+
+enum TypeCreneau {
+  TRAVAIL
+  FORMATION
+  REUNION
+}
+
+enum EnumPermission {
+  PLANNING_READ
+  PLANNING_CREATE
+  PLANNING_UPDATE
+  PLANNING_DELETE
+  PLANNING_PUBLISH
+  PLANNING_OVERRIDE
+  LEAVE_REQUEST
+  LEAVE_APPROVE
+  LEAVE_MANAGE_TYPES
+  LEAVE_VIEW_TEAM
+  EMPLOYEE_READ
+  EMPLOYEE_EDIT
+  EMPLOYEE_MANAGE_CONTRACTS
+  EMPLOYEE_MANAGE_SKILLS
+  TEAM_ASSIGN
+  TEAM_MANAGE
+  TEAM_VIEW_STATS
+  CONFIG_UPDATE
+  ROLE_MANAGE
+  PERMISSION_MANAGE
+  SYSTEM_BACKUP
+  ALL_ACCESS
+}
+
+model Poste {
+  id           String              @id @default(uuid())
+  nom         String     @unique
+  description String?
+  employees   Employee[]  // 1 Poste → 0 ou N Employees
+}
+
+
+model Employee {
+  id              String              @id @default(uuid())
+  nom             String
+  prenom          String
+  email           String               @unique
+  passwordHash   String    // Pour stocker le mot de passe haché
+  isActive       Boolean   @default(true)
+  lastLogin      DateTime?
+  lastLogout      DateTime?
+  posteId         String?                // clé étrangère
+  poste           Poste?              @relation(fields: [posteId], references: [id])
+  telephone       String?
+  adresse         String?
+  role            EnumRole
+  dateEmbauche    DateTime
+  dateFin         DateTime?
+  permissions     EmployeePermission[]
+  contrats        Contrat[]            
+  disponibilites  Disponibilite[]      
+  conges          Conge[]              
+  rapportsEmploye Rapport[]            @relation("RapportEmploye")
+  rapportsCreateur Rapport[]           @relation("RapportCreateur")
+  notifications   Notification[]       
+  plannings       Planning[]           
+  taches          Tache[]              
+  creneaux        Creneau[]
+  syntheses       SyntheseHeures[]
+  revoked_token   RevokedToken[]       
+}
+
+model EmployeePermission {
+  id              String              @id @default(uuid())
+  employee    Employee?       @relation(fields: [employeeId], references: [id], onDelete: Cascade) // Rendue optionnelle
+  employeeId  String?
+  permission  EnumPermission
+  @@unique([employeeId, permission])
+  @@index([employeeId])
+}
+
+model SyntheseHeures {
+  id              String              @default(uuid())
+  employee        Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId      String
+  periodeFrom     DateTime
+  periodeTo       DateTime
+  heuresNormales  Int
+  heuresSupplementaires Int
+  statut          StatutValidation @default(BROUILLON)
+  planning        Planning       @relation(fields: [planningId], references: [id])
+  planningId      String
+  @@id([planningId, employeeId])
+}
+
+model Planning {
+  id              String              @id @default(uuid())
+  nom             String
+  createur        Employee       @relation(fields: [createurId], references: [id], onDelete: Cascade)
+  createurId      String
+  dateCreation    DateTime       @default(now())
+  periode         DateRange      @relation(fields: [dateRangeId], references: [id])
+  dateRangeId     String
+  statut          StatutValidation @default(BROUILLON)
+  creneaux        Creneau[]
+  syntheses       SyntheseHeures[]
+}
+
+model Creneau {
+  id              String              @id @default(uuid())
+  dateDebut       DateTime
+  dateFin         DateTime
+  type            TypeCreneau
+  employee        Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId     String
+  valide          Boolean        @default(false)
+  statutTache     EnumStatutTache @default(A_FAIRE)
+  duree           Int            // en minutes
+  commentaire     String?
+  tache           Tache          @relation(fields: [tacheId], references: [id])
+  tacheId         String
+  planning        Planning       @relation(fields: [planningId], references: [id])
+  planningId      String
+}
+
+model Tache {
+  id              String              @id @default(uuid())
+  label           String
+  description     String
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime?
+  dateLimite      DateTime
+  statut          EnumStatutTache @default(A_FAIRE)
+  dateCompletion  DateTime?
+  employee        Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId      String
+  creneaux        Creneau[]
+}
+
+model DateRange {
+  id              String              @id @default(uuid())
+  debut           DateTime
+  fin             DateTime
+  plannings       Planning[]
+}
+
+
+model Notification {
+  id              String              @id @default(uuid())
+  destinataire    Employee       @relation(fields: [destinataireId], references: [id], onDelete: Cascade)
+  destinataireId  String
+  message         String
+  date            DateTime       @default(now())
+  statut          StatutNotification @default(ENVOYEE)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime?
+}
+
+model Rapport {
+  id              String              @id @default(uuid())
+  employe         Employee  @relation("RapportEmploye", fields: [employeId], references: [id])
+  employeId       String
+  createur        Employee  @relation("RapportCreateur", fields: [createurId], references: [id])
+  createurId      String
+  dateCreation    DateTime  @default(now())
+  type            String
+  statut          StatutValidation @default(BROUILLON)
+
+  @@index([employeId])
+  @@index([createurId])
+}
+
+model Conge {
+  id              String              @id @default(uuid())
+  employee        Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId      String
+  type            TypeConge
+  dateDebut       DateTime
+  dateFin         DateTime
+  commentaire     String?
+  statut          StatutDemande  @default(EN_ATTENTE)
+  cancelledAt     DateTime?
+  cancelledBy     String?
+  cancelledComment String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime?
+  updatedBy       String?
+  approveAt     DateTime?
+  approveBy     String?
+  approvalComment String?
+  rejectedAt      DateTime?
+  rejectedBy      String?
+  rejectedComment String?
+}
+
+model Disponibilite {
+  id              String              @id @default(uuid())
+  employee        Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId      String
+  jour            EnumJour
+  heureDebut      DateTime
+  heureFin        DateTime
+}
+
+model Contrat {
+  id              String              @id @default(uuid())
+  employee        Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId      String
+  type            EnumContrat
+  dateDebut       DateTime
+  dateFin         DateTime?
+}
+
+model RevokedToken {
+  id           String   @id @default(uuid())
+  token        String   @unique
+  employee_id  String
+  expiresAt    DateTime
+  revokedAt    DateTime @default(now())
+  employee     Employee @relation(fields: [employee_id], references: [id], onDelete: Cascade)
+}
