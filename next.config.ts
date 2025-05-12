@@ -1,7 +1,6 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
+module.exports = {
+  output: 'standalone', // Important pour Vercel
+  experimental: {
+    serverComponentsExternalPackages: ["@prisma/client", "prisma"]
+  }
 };
-
-export default nextConfig;
