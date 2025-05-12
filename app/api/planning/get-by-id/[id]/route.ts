@@ -5,8 +5,9 @@ import { EnumPermission } from '@prisma/client';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const id = (await params).id;
   try {
     // 1. Vérification de l'authentification
     const token = request.headers.get('authorization')?.split(' ')[1];
@@ -23,7 +24,7 @@ export async function GET(
 
     // 3. Récupération du planning avec toutes les relations nécessaires
     const planning = await prisma.planning.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       select: {
         id: true,
         nom: true,

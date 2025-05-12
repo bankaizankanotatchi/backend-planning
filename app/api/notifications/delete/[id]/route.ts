@@ -4,8 +4,9 @@ import { verifyToken } from '@/lib/auth/jwt';
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const id = (await params).id;
   try {
     // 1. Authentification obligatoire
     const token = request.headers.get('authorization')?.split(' ')[1];
@@ -28,7 +29,7 @@ export async function DELETE(
     const userId = decoded.employeeId;
 
     // 3. Validation UUID
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(params.id)) {
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
       return NextResponse.json(
         { success: false, error: 'Format de notification invalide' },
         { status: 400 }
@@ -38,7 +39,7 @@ export async function DELETE(
     // 4. Vérification des droits en une seule requête
     const notification = await prisma.notification.findFirst({
       where: {
-        id: params.id,
+        id: id,
         destinataireId: userId // Critère crucial - seul le destinataire peut supprimer
       }
     });
@@ -53,13 +54,13 @@ export async function DELETE(
 
     // 5. Suppression
     await prisma.notification.delete({
-      where: { id: params.id }
+      where: { id: id }
     });
 
     // 6. Réponse succès
     return NextResponse.json({
       success: true,
-      data: { id: params.id },
+      data: { id: id },
       message: 'Notification supprimée'
     });
 

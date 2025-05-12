@@ -5,8 +5,9 @@ import { verifyToken } from '@/lib/auth/jwt';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const id = (await params).id;
   try {
     // 1. Authentification
     const token = request.headers.get('authorization')?.split(' ')[1];
@@ -26,7 +27,7 @@ export async function GET(
     }
 
     // 2. Validation de l'ID
-    const leaveRequestId = params.id;
+    const leaveRequestId = id;
     if (!leaveRequestId) {
       return NextResponse.json(
         { error: 'ID de demande de congé manquant' },

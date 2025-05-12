@@ -4,8 +4,9 @@ import { verifyToken } from '@/lib/auth/jwt';
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const id = (await params).id;
   try {
     // 1. Authentification et permissions
     const token = request.headers.get('authorization')?.split(' ')[1];
@@ -31,7 +32,7 @@ export async function DELETE(
 
     // 3. Récupération du créneau (en dehors de la transaction)
     const timeSlot = await prisma.creneau.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       select: {
         employeeId: true,
         planningId: true,
@@ -48,7 +49,7 @@ export async function DELETE(
     // 4. Transaction avec timeout étendu
     await prismaClient.$transaction(async (tx) => {
       // a. Suppression du créneau
-      await tx.creneau.delete({ where: { id: params.id } });
+      await tx.creneau.delete({ where: { id: id } });
 
       // b. Mise à jour asynchrone de la synthèse (pour réduire le temps de transaction)
       setTimeout(async () => {

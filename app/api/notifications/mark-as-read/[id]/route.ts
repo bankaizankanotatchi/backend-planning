@@ -5,8 +5,9 @@ import { StatutNotification } from '@prisma/client';
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const id = (await params).id;
   try {
     // Vérification du token
     const token = request.headers.get('authorization')?.split(' ')[1];
@@ -20,7 +21,7 @@ export async function PATCH(
     }
 
     // Validation de l'ID
-    if (!params.id || typeof params.id !== 'string') {
+    if (!id || typeof id !== 'string') {
       return NextResponse.json(
         { error: 'ID de notification invalide' },
         { status: 400 }
@@ -30,7 +31,7 @@ export async function PATCH(
     // Vérification de l'existence et des permissions
     const existingNotification = await prisma.notification.findFirst({
       where: {
-        id: params.id,
+        id: id,
         destinataireId: decoded.employeeId
       }
     });
@@ -45,7 +46,7 @@ export async function PATCH(
     // Mise à jour uniquement si nécessaire
     if (existingNotification.statut !== 'LUE') {
       const updatedNotification = await prisma.notification.update({
-        where: { id: params.id },
+        where: { id: id },
         data: { statut: 'LUE' },
         select: {
           id: true,

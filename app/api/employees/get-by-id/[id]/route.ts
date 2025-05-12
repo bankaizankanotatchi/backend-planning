@@ -4,8 +4,10 @@ import { verifyToken } from '@/lib/auth/jwt';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+
+  const id = (await params).id;
   try {
     // 1. Vérification de l'authentification
     const token = request.headers.get('authorization')?.split(' ')[1];
@@ -29,7 +31,7 @@ export async function GET(
 
     // 3. Récupération de l'employé avec les relations
     const employee = await prisma.employee.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       select: {
         id: true,
         nom: true,

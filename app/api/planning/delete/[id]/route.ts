@@ -5,8 +5,9 @@ import { StatutValidation } from '@prisma/client';
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const id = (await params).id;
   try {
     // 1. Authentification et vérification des permissions
     const token = request.headers.get('authorization')?.split(' ')[1];
@@ -22,7 +23,7 @@ export async function DELETE(
 
     // 2. Vérification que le planning existe et récupération des dépendances
     const planning = await prisma.planning.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         periode: true,
         creneaux: {
@@ -51,20 +52,20 @@ export async function DELETE(
       // a. Suppression des créneaux associés
       if (planning.creneaux.length > 0) {
         await prisma.creneau.deleteMany({
-          where: { planningId: params.id }
+          where: { planningId: id }
         });
       }
 
       // b. Suppression des synthèses horaires associées
       if (planning.syntheses.length > 0) {
         await prisma.syntheseHeures.deleteMany({
-          where: { planningId: params.id }
+          where: { planningId: id }
         });
       }
 
       // c. Suppression du planning
       await prisma.planning.delete({
-        where: { id: params.id }
+        where: { id: id }
       });
 
       // d. Suppression de la période associée (si non utilisée ailleurs)

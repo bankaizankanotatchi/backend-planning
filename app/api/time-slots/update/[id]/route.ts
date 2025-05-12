@@ -18,8 +18,9 @@ const updateTimeSlotSchema = z.object({
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const id = (await params).id;
   try {
     // 1. Authentification et permissions
     const token = request.headers.get('authorization')?.split(' ')[1];
@@ -39,7 +40,7 @@ export async function PUT(
 
     // 3. Vérification que le créneau existe
     const existingTimeSlot = await prisma.creneau.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: { planning: true }
     });
 
@@ -55,7 +56,7 @@ export async function PUT(
       const conflicts = await prisma.creneau.findMany({
         where: {
           employeeId: validatedData.employeeId || existingTimeSlot.employeeId,
-          NOT: { id: params.id },
+          NOT: { id: id },
           OR: [
             {
               dateDebut: { lt: endDate },
@@ -89,7 +90,7 @@ export async function PUT(
     const updatedTimeSlot = await prisma.$transaction(async (prisma) => {
       // a. Mise à jour du créneau
       const timeSlot = await prisma.creneau.update({
-        where: { id: params.id },
+        where: { id: id },
         data: {
           employeeId: validatedData.employeeId,
           tacheId: validatedData.tacheId,

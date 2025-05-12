@@ -5,8 +5,9 @@ import { verifyToken } from '@/lib/auth/jwt';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const id = (await params).id;
   try {
     // 1. Vérification d'authentification
     const token = request.headers.get('authorization')?.split(' ')[1];
@@ -38,7 +39,7 @@ export async function GET(
     }
 
     // 4. Validation de l'ID
-    const creneauId = params.id;
+    const creneauId = id;
     if (!creneauId || typeof creneauId !== 'string') {
       return NextResponse.json(
         { error: 'ID de créneau invalide' },

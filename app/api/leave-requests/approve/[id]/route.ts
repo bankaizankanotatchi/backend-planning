@@ -12,8 +12,9 @@ const approveSchema = z.object({
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const id = (await params).id;
   try {
     // 1. Authentification et vérification des permissions
     const token = request.headers.get('authorization')?.split(' ')[1];
@@ -43,7 +44,7 @@ export async function POST(
     }
 
     // 3. Validation de l'ID
-    const leaveRequestId = params.id;
+    const leaveRequestId = id;
     if (!leaveRequestId) {
       return NextResponse.json(
         { error: 'ID de demande de congé manquant' },

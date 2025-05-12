@@ -23,8 +23,9 @@ const updateEmployeeSchema = z.object({
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const id = (await params).id;
   try {
     // Vérification du token et des permissions
     const token = request.headers.get('authorization')?.split(' ')[1];
@@ -42,7 +43,7 @@ export async function PUT(
 
     // Vérification que l'employé existe avec son contrat actuel
     const existingEmployee = await prisma.employee.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: { 
         permissions: true,
         contrats: {
@@ -135,7 +136,7 @@ export async function PUT(
     const updatedEmployee = await prisma.$transaction(async (prisma) => {
       // Mise à jour des données de base
       const employee = await prisma.employee.update({
-        where: { id: params.id },
+        where: { id: id },
         data: {
           nom: validatedData.nom,
           prenom: validatedData.prenom,
@@ -161,7 +162,7 @@ export async function PUT(
         ) {
           await prisma.contrat.create({
             data: {
-              employeeId: params.id,
+              employeeId: id,
               type: validatedData.typeContrat as EnumContrat,
               dateDebut: now,
               dateFin: validatedData.dateFinContrat ? new Date(validatedData.dateFinContrat) : null
@@ -173,13 +174,13 @@ export async function PUT(
       // Gestion des permissions si nécessaire
       if (finalPermissions !== undefined) {
         await prisma.employeePermission.deleteMany({
-          where: { employeeId: params.id }
+          where: { employeeId: id }
         });
 
         if (finalPermissions.length > 0) {
           await prisma.employeePermission.createMany({
             data: finalPermissions.map(permission => ({
-              employeeId: params.id,
+              employeeId: id,
               permission: permission as EnumPermission
             }))
           });

@@ -22,8 +22,9 @@ const updateTaskSchema = z.object({
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const id = (await params).id;
   try {
     // 1. Authentification
     const token = request.headers.get('authorization')?.split(' ')[1];
@@ -53,7 +54,7 @@ export async function PUT(
     }
 
     // 3. Validation de l'ID
-    const taskId = params.id;
+    const taskId = id;
     if (!taskId) {
       return NextResponse.json(
         { error: 'ID de tâche manquant' },

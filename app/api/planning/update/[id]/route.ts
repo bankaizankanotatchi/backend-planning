@@ -27,8 +27,9 @@ const updatePlanningSchema = z.object({
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const id = (await params).id;
   try {
     // 1. Authentification et permissions
     const token = request.headers.get('authorization')?.split(' ')[1];
@@ -48,7 +49,7 @@ export async function PUT(
 
     // 3. Vérification que le planning existe
     const existingPlanning = await prisma.planning.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         periode: true,
         creneaux: true
@@ -63,7 +64,7 @@ export async function PUT(
     if (validatedData.creneaux) {
       const conflicts = await checkCreneauConflicts(
         validatedData.creneaux, 
-        params.id
+        id
       );
       if (conflicts.length > 0) {
         return NextResponse.json(
@@ -98,7 +99,7 @@ export async function PUT(
 
       // b. Mise à jour du planning
       const planning = await prisma.planning.update({
-        where: { id: params.id },
+        where: { id: id },
         data: {
           nom: validatedData.nom,
           statut: validatedData.statut,
@@ -117,7 +118,7 @@ export async function PUT(
 
         await prisma.creneau.deleteMany({
           where: {
-            planningId: params.id,
+            planningId: id,
             NOT: { id: { in: creneauxToKeep } }
           }
         });
@@ -147,7 +148,7 @@ export async function PUT(
                 ...creneau,
                 dateDebut: new Date(creneau.dateDebut),
                 dateFin: new Date(creneau.dateFin),
-                planningId: params.id,
+                planningId: id,
                 valide: creneau.valide ?? false,
                 statutTache: creneau.statutTache ?? 'A_FAIRE'
               }
@@ -156,7 +157,7 @@ export async function PUT(
         }
 
         // d. Mise à jour des synthèses horaires
-        await updateSyntheses(prisma, params.id);
+        await updateSyntheses(prisma, id);
       }
 
       return planning;
