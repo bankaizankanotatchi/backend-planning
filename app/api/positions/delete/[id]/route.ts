@@ -1,4 +1,25 @@
+/**
+ * Supprime un poste en fonction de l'ID fourni dans les paramètres.
+ * 
+ * @param request - L'objet de requête HTTP.
+ * @param params - Les paramètres de la requête, contenant l'ID du poste à supprimer.
+ * 
+ * @returns Une réponse JSON indiquant le résultat de l'opération :
+ * - 200 : Succès, le poste a été supprimé.
+ * - 400 : Erreur, le poste est attribué à des employés et ne peut pas être supprimé.
+ * - 401 : Non autorisé, le token d'authentification est manquant ou invalide.
+ * - 403 : Permissions insuffisantes pour effectuer cette action.
+ * - 500 : Erreur interne du serveur lors de la suppression.
+ * 
+ * @throws Renvoie une réponse JSON avec un message d'erreur en cas de problème.
+ * 
+ * @remarks
+ * Cette API vérifie d'abord le token d'authentification et les permissions de l'utilisateur.
+ * Si le poste est attribué à des employés, la suppression est bloquée.
+ * Utilise Prisma pour interagir avec la base de données.
+ */
 // app/api/postes/delete/[id]/route.ts
+
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth/jwt';
 import prisma from '@/lib/prisma';

@@ -1,3 +1,50 @@
+
+
+/**
+ * Met à jour les informations d'un employé existant.
+ *
+ * @param request - La requête HTTP contenant les données de mise à jour de l'employé.
+ * @param params - Les paramètres de la requête, incluant l'identifiant de l'employé (`id`).
+ * 
+ * @returns Une réponse JSON contenant un message de succès et les détails de l'employé mis à jour,
+ * ou une erreur avec un code de statut HTTP approprié.
+ *
+ * @throws {401 Unauthorized} Si le token d'autorisation est manquant ou invalide.
+ * @throws {403 Forbidden} Si l'utilisateur n'a pas les permissions nécessaires pour modifier un employé.
+ * @throws {404 Not Found} Si l'employé avec l'identifiant spécifié n'existe pas.
+ * @throws {400 Bad Request} Si les données fournies sont invalides ou si des règles métier ne sont pas respectées.
+ * @throws {409 Conflict} Si l'email fourni est déjà utilisé par un autre employé.
+ * @throws {500 Internal Server Error} En cas d'erreur inattendue lors de la mise à jour.
+ *
+ * ### Schéma de validation des données
+ * - `nom`: Chaîne de caractères, minimum 2 caractères, optionnel.
+ * - `prenom`: Chaîne de caractères, minimum 2 caractères, optionnel.
+ * - `email`: Email valide, optionnel.
+ * - `password`: Chaîne de caractères, minimum 8 caractères, optionnel.
+ * - `posteId`: UUID valide, optionnel.
+ * - `telephone`: Chaîne de caractères, optionnel.
+ * - `adresse`: Chaîne de caractères, optionnel.
+ * - `role`: Enumération parmi `EMPLOYE_BASE`, `MANAGER`, `ADMIN`, optionnel.
+ * - `isActive`: Booléen, optionnel.
+ * - `typeContrat`: Enumération parmi `CDI`, `CDD`, `INTERIM`, optionnel.
+ * - `dateFinContrat`: Date valide au format ISO 8601, optionnel.
+ * - `permissions`: Tableau de chaînes de caractères représentant les permissions, optionnel.
+ *
+ * ### Règles métier
+ * - Si `typeContrat` est `CDD` ou `INTERIM`, `dateFinContrat` est obligatoire et doit être dans le futur.
+ * - Si `email` est modifié, il doit être unique.
+ * - Les permissions fournies doivent être compatibles avec le rôle spécifié.
+ * - Si un nouveau contrat est créé, il remplace le contrat actuel.
+ *
+ * ### Exemple de réponse en cas de succès
+ * ```json
+ * {
+ *   "message": "Employé mis à jour avec succès",
+ *   "employee": { ... },
+ *   "permissionsUpdated": true
+ * }
+ * ```
+ */
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';

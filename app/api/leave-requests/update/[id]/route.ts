@@ -1,4 +1,57 @@
+/**
+ * Met à jour une demande de congé existante.
+ *
+ * @function PUT
+ * @param {Request} request - La requête HTTP contenant les données de mise à jour.
+ * @param {Object} context - Le contexte de la requête, incluant les paramètres.
+ * @param {Promise<{ id: string }>} context.params - Les paramètres de la requête, incluant l'ID de la demande de congé.
+ * @returns {Promise<NextResponse>} La réponse HTTP avec le résultat de la mise à jour.
+ *
+ * @description
+ * Cette API permet de mettre à jour une demande de congé existante. Elle effectue plusieurs vérifications :
+ * - Authentification et validation du token JWT.
+ * - Vérification des permissions de l'utilisateur (admin, gestionnaire ou utilisateur régulier).
+ * - Validation des données d'entrée avec Zod.
+ * - Vérification des conflits avec d'autres congés existants.
+ * - Restrictions spécifiques pour les utilisateurs non-admins.
+ *
+ * Les champs pouvant être mis à jour incluent :
+ * - `type` : Le type de congé (ANNUEL, PARENTAL, etc.).
+ * - `dateDebut` : La date de début du congé.
+ * - `dateFin` : La date de fin du congé.
+ * - `commentaire` : Un commentaire optionnel.
+ * - `statut` : Le statut de la demande (EN_ATTENTE, VALIDE, etc.).
+ *
+ * @throws {401} Si l'utilisateur n'est pas authentifié ou si le token est invalide.
+ * @throws {403} Si l'utilisateur n'a pas les permissions nécessaires ou tente de modifier une demande non autorisée.
+ * @throws {400} Si les données fournies sont invalides ou si la date de fin est antérieure à la date de début.
+ * @throws {404} Si la demande de congé avec l'ID spécifié n'est pas trouvée.
+ * @throws {409} Si les dates fournies entrent en conflit avec d'autres congés existants.
+ * @throws {500} En cas d'erreur serveur ou d'exception inattendue.
+ *
+ * @example
+ * // Requête PUT pour mettre à jour une demande de congé
+ * fetch('/api/leave-requests/update/123', {
+ *   method: 'PUT',
+ *   headers: {
+ *     'Content-Type': 'application/json',
+ *     'Authorization': 'Bearer <token>'
+ *   },
+ *   body: JSON.stringify({
+ *     type: 'ANNUEL',
+ *     dateDebut: '2023-10-01T00:00:00.000Z',
+ *     dateFin: '2023-10-15T00:00:00.000Z',
+ *     commentaire: 'Besoin de repos',
+ *     statut: 'EN_ATTENTE'
+ *   })
+ * });
+ *
+ * @see {@link https://zod.dev/} pour la validation des données avec Zod.
+ * @see {@link https://nextjs.org/docs/api-routes/introduction} pour les routes API Next.js.
+ */
 // app/api/leave-requests/update/[id]/route.ts
+
+
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';

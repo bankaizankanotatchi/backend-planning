@@ -1,4 +1,53 @@
+/**
+ * Gestionnaire pour la méthode GET de l'API des demandes de congé.
+ * Cette fonction permet de récupérer une liste de demandes de congé
+ * en fonction des permissions de l'utilisateur authentifié.
+ *
+ * @param request - L'objet `Request` de la requête entrante.
+ * 
+ * @returns Une réponse JSON contenant :
+ * - `success`: Indique si l'opération a réussi.
+ * - `data`: Une liste formatée des demandes de congé avec les informations des employés associés.
+ * - `meta`: Métadonnées sur la réponse, incluant le nombre de demandes et les permissions de l'utilisateur.
+ * - En cas d'erreur, un objet JSON avec un message d'erreur et un code de statut HTTP approprié.
+ *
+ * ### Étapes principales :
+ * 1. **Authentification** :
+ *    - Vérifie la présence et la validité du token JWT dans les en-têtes de la requête.
+ *    - Retourne une erreur 401 si le token est manquant ou invalide.
+ *
+ * 2. **Vérification des permissions** :
+ *    - Vérifie si l'utilisateur a les permissions nécessaires pour accéder aux données.
+ *    - Permissions possibles :
+ *      - `hasAllAccess`: Accès administrateur.
+ *      - `LEAVE_VIEW_TEAM`: Accès pour voir les demandes de l'équipe.
+ *      - `LEAVE_REQUEST`: Accès utilisateur régulier pour voir ses propres demandes.
+ *    - Retourne une erreur 403 si les permissions sont insuffisantes.
+ *
+ * 3. **Détermination du scope des données** :
+ *    - Si l'utilisateur n'est ni administrateur ni autorisé à voir les demandes de l'équipe,
+ *      il ne peut voir que ses propres demandes.
+ *
+ * 4. **Récupération des données** :
+ *    - Récupère les demandes de congé depuis la base de données avec une limite de 1000 enregistrements.
+ *    - Inclut les relations nécessaires, comme les informations sur l'employé et son poste.
+ *
+ * 5. **Formatage des données** :
+ *    - Formate les données pour le front-end, incluant les informations sur l'employé
+ *      (nom complet, email, poste) et les détails de la demande (type, dates, statut, etc.).
+ *
+ * 6. **Gestion des erreurs** :
+ *    - Capture et log les erreurs éventuelles.
+ *    - Retourne une réponse 500 avec des détails supplémentaires en mode développement.
+ *
+ * ### Codes de statut HTTP possibles :
+ * - `200`: Succès, données récupérées.
+ * - `401`: Authentification requise ou token invalide.
+ * - `403`: Permissions insuffisantes.
+ * - `500`: Erreur interne du serveur.
+ */
 // app/api/leave-requests/get-all/route.ts
+
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';

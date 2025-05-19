@@ -1,3 +1,68 @@
+
+
+/**
+ * Met à jour un planning existant dans la base de données.
+ * 
+ * @param request - La requête HTTP contenant les données de mise à jour du planning.
+ * @param params - Les paramètres de la requête, incluant l'identifiant du planning à mettre à jour.
+ * 
+ * @returns Une réponse JSON indiquant le succès ou l'échec de l'opération.
+ * 
+ * ### Étapes principales :
+ * 1. **Authentification et permissions** :
+ *    - Vérifie la présence et la validité du token JWT.
+ *    - Vérifie si l'utilisateur a les permissions nécessaires (`PLANNING_UPDATE` ou accès total).
+ * 
+ * 2. **Validation des données** :
+ *    - Valide les données de la requête à l'aide de `zod` selon le schéma `updatePlanningSchema`.
+ * 
+ * 3. **Vérification de l'existence du planning** :
+ *    - Vérifie si le planning avec l'ID fourni existe dans la base de données.
+ * 
+ * 4. **Vérification des conflits de créneaux** :
+ *    - Si des créneaux sont fournis, vérifie les conflits avec d'autres créneaux existants pour les mêmes employés.
+ * 
+ * 5. **Mise à jour transactionnelle** :
+ *    - Met à jour les informations du planning, y compris les périodes et les créneaux associés.
+ *    - Supprime les anciens créneaux non inclus dans la mise à jour.
+ *    - Crée ou met à jour les créneaux fournis.
+ *    - Met à jour les synthèses horaires associées au planning.
+ * 
+ * 6. **Gestion des erreurs** :
+ *    - Retourne une erreur 400 si les données sont invalides.
+ *    - Retourne une erreur 401 si le token est manquant ou invalide.
+ *    - Retourne une erreur 403 si l'utilisateur n'a pas les permissions nécessaires.
+ *    - Retourne une erreur 404 si le planning n'est pas trouvé.
+ *    - Retourne une erreur 409 en cas de conflits de créneaux.
+ *    - Retourne une erreur 500 pour toute autre erreur serveur.
+ * 
+ * ### Exemple de réponse en cas de succès :
+ * ```json
+ * {
+ *   "success": true,
+ *   "planningId": "123e4567-e89b-12d3-a456-426614174000",
+ *   "message": "Planning mis à jour avec succès"
+ * }
+ * ```
+ * 
+ * ### Exemple de réponse en cas de conflit :
+ * ```json
+ * {
+ *   "error": "Conflits de planning détectés",
+ *   "conflicts": [
+ *     {
+ *       "creneauPropose": { ... },
+ *       "conflits": [ ... ]
+ *     }
+ *   ],
+ *   "message": "1 conflit(s) trouvé(s)"
+ * }
+ * ```
+ * 
+ * ### Notes :
+ * - Les créneaux sont vérifiés pour éviter les chevauchements avec d'autres créneaux pour le même employé.
+ * - Les synthèses horaires sont recalculées après chaque mise à jour des créneaux.
+ */
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';

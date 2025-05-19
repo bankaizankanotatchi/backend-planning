@@ -1,4 +1,48 @@
+/**
+ * @module ApproveLeaveRequestAPI
+ * 
+ * @description
+ * API pour approuver une demande de congé. Cette route permet de valider une demande de congé
+ * en effectuant plusieurs vérifications, notamment l'authentification, les permissions, 
+ * la validation des données et la gestion des conflits potentiels.
+ * 
+ * @function POST
+ * 
+ * @param {Request} request - L'objet de la requête HTTP.
+ * @param {Object} context - Contexte de la requête contenant les paramètres dynamiques.
+ * @param {Promise<{ id: string }>} context.params - Les paramètres de la requête, incluant l'ID de la demande de congé.
+ * 
+ * @returns {NextResponse} - Une réponse JSON contenant le résultat de l'opération.
+ * 
+ * @throws {401} - Si l'utilisateur n'est pas authentifié ou si le token est invalide/expiré.
+ * @throws {403} - Si l'utilisateur n'a pas les permissions nécessaires ou tente d'approuver sa propre demande.
+ * @throws {400} - Si l'ID de la demande est manquant ou si le statut actuel de la demande ne permet pas l'approbation.
+ * @throws {404} - Si la demande de congé n'est pas trouvée.
+ * @throws {409} - Si un conflit est détecté avec d'autres congés déjà approuvés.
+ * @throws {500} - En cas d'erreur serveur lors du traitement de la demande.
+ * 
+ * @example
+ * // Requête POST pour approuver une demande de congé
+ * fetch('/api/leave-requests/approve/123', {
+ *   method: 'POST',
+ *   headers: {
+ *     'Authorization': 'Bearer <token>',
+ *     'Content-Type': 'application/json'
+ *   },
+ *   body: JSON.stringify({
+ *     approvalComment: 'Approuvé après vérification'
+ *   })
+ * });
+ * 
+ * @remarks
+ * - Cette API vérifie que l'utilisateur dispose des permissions nécessaires (LEAVE_APPROVE ou ALL_ACCESS).
+ * - Elle empêche l'auto-approbation des demandes de congé.
+ * - Elle valide les données optionnelles fournies dans le corps de la requête.
+ * - Elle détecte les conflits potentiels avec d'autres congés approuvés pour le même employé.
+ * - Une notification est envoyée à l'employé concerné après l'approbation.
+ */
 // app/api/leave-requests/approve/[id]/route.ts
+
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';

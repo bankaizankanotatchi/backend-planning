@@ -1,3 +1,44 @@
+
+
+/**
+ * Révoque une permission d'un rôle spécifique.
+ * 
+ * @function POST
+ * @param {Request} request - La requête HTTP contenant les informations nécessaires pour révoquer une permission.
+ * 
+ * @description
+ * Cette API permet de révoquer une permission spécifique d'un rôle donné. 
+ * Elle vérifie d'abord l'authentification et les permissions de l'utilisateur appelant.
+ * Si l'utilisateur dispose des droits nécessaires (`PERMISSION_MANAGE` ou accès complet), 
+ * la permission est retirée du rôle spécifié et les employés associés à ce rôle sont mis à jour en base de données.
+ * 
+ * @throws {401} Si l'utilisateur n'est pas authentifié (absence de token).
+ * @throws {403} Si l'utilisateur n'a pas les permissions nécessaires pour effectuer cette action.
+ * @throws {400} Si les données fournies sont invalides ou si la permission n'est pas attribuée au rôle.
+ * @throws {500} En cas d'erreur interne lors de la révocation.
+ * 
+ * @example
+ * // Requête POST
+ * const response = await fetch('/api/employees/permissions/revoke', {
+ *   method: 'POST',
+ *   headers: {
+ *     'Content-Type': 'application/json',
+ *     'Authorization': 'Bearer <token>'
+ *   },
+ *   body: JSON.stringify({
+ *     role: 'MANAGER',
+ *     permission: 'VIEW_REPORTS'
+ *   })
+ * });
+ * 
+ * @returns {NextResponse} Une réponse JSON contenant :
+ * - `message`: Confirmation de la révocation.
+ * - `affectedEmployees`: Le nombre d'employés affectés par la modification.
+ * 
+ * @zod revokeSchema
+ * - `role`: Doit être l'une des valeurs suivantes : `EMPLOYE_BASE`, `MANAGER`, `ADMIN`.
+ * - `permission`: Doit être une valeur valide de l'énumération `EnumPermission`.
+ */
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';

@@ -1,3 +1,35 @@
+
+
+/**
+ * Supprime une notification spécifique pour un utilisateur authentifié.
+ *
+ * @param request - L'objet de requête HTTP contenant les en-têtes et les informations nécessaires.
+ * @param params - Les paramètres de la requête, incluant l'identifiant unique (`id`) de la notification à supprimer.
+ *
+ * @returns Une réponse JSON indiquant le succès ou l'échec de l'opération.
+ *
+ * @throws {401 Unauthorized} Si l'utilisateur n'est pas authentifié ou si le token est invalide.
+ * @throws {400 Bad Request} Si l'identifiant de la notification n'est pas au format UUID valide.
+ * @throws {403 Forbidden} Si l'utilisateur n'a pas les droits nécessaires pour supprimer la notification.
+ * @throws {500 Internal Server Error} En cas d'erreur inattendue lors du traitement.
+ *
+ * ### Étapes de traitement :
+ * 1. Vérifie la présence d'un token d'authentification dans les en-têtes de la requête.
+ * 2. Valide le token et récupère l'identifiant de l'utilisateur (`employeeId`).
+ * 3. Vérifie que l'identifiant de la notification est un UUID valide.
+ * 4. Vérifie que la notification existe et que l'utilisateur authentifié est bien le destinataire.
+ * 5. Supprime la notification de la base de données.
+ * 6. Retourne une réponse JSON indiquant le succès de l'opération.
+ *
+ * ### Exemple de réponse en cas de succès :
+ * ```json
+ * {
+ *   "success": true,
+ *   "data": { "id": "uuid-de-la-notification" },
+ *   "message": "Notification supprimée"
+ * }
+ * ```
+ */
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';

@@ -1,4 +1,51 @@
+/**
+ * @module API/LeaveRequests/Reject
+ * @file /app/api/leave-requests/reject/[id]/route.ts
+ * 
+ * @description
+ * API pour rejeter une demande de congé. Cette route permet aux utilisateurs autorisés
+ * de rejeter une demande de congé en fournissant une raison optionnelle.
+ * 
+ * @function POST
+ * @async
+ * 
+ * @param {Request} request - L'objet de requête HTTP contenant les en-têtes et le corps.
+ * @param {Object} context - Contexte de la requête, incluant les paramètres dynamiques.
+ * @param {Promise<{ id: string }>} context.params - Paramètres dynamiques, incluant l'ID de la demande de congé.
+ * 
+ * @returns {Promise<NextResponse>} - Une réponse HTTP contenant le statut et les données associées.
+ * 
+ * @throws {401} - Si l'utilisateur n'est pas authentifié ou si le token est invalide/expiré.
+ * @throws {403} - Si l'utilisateur n'a pas les permissions nécessaires ou tente de rejeter sa propre demande.
+ * @throws {400} - Si l'ID de la demande est manquant, si le statut de la demande est invalide, ou si les données fournies sont incorrectes.
+ * @throws {404} - Si la demande de congé n'est pas trouvée.
+ * @throws {500} - En cas d'erreur interne du serveur.
+ * 
+ * @example
+ * // Requête POST pour rejeter une demande de congé
+ * fetch('/api/leave-requests/reject/123', {
+ *   method: 'POST',
+ *   headers: {
+ *     'Authorization': 'Bearer <token>',
+ *     'Content-Type': 'application/json'
+ *   },
+ *   body: JSON.stringify({ reason: 'Raison du rejet' })
+ * });
+ * 
+ * @remarks
+ * - Seules les demandes avec le statut "EN_ATTENTE" peuvent être rejetées.
+ * - Une notification est envoyée à l'employé concerné après le rejet.
+ * - La raison du rejet est optionnelle mais doit contenir entre 10 et 500 caractères si fournie.
+ * 
+ * @dependencies
+ * - `prisma` : Pour interagir avec la base de données.
+ * - `verifyToken` : Pour vérifier l'authentification et les permissions de l'utilisateur.
+ * - `zod` : Pour valider les données du corps de la requête.
+ * 
+ * @see {@link https://nextjs.org/docs/api-routes/introduction} pour plus d'informations sur les routes API Next.js.
+ */
 // app/api/leave-requests/reject/[id]/route.ts
+
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';

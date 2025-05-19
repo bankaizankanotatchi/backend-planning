@@ -1,4 +1,53 @@
+/**
+ * @module API/LeaveRequests
+ * @file route.ts
+ * 
+ * @description
+ * API pour la création de demandes de congé. Cette API permet aux employés
+ * authentifiés de soumettre une demande de congé en respectant les règles
+ * de validation définies, telles que les types de congés, les durées maximales,
+ * et les conflits avec les congés existants.
+ * 
+ * @function POST
+ * @async
+ * 
+ * @param {Request} request - La requête HTTP contenant les données de la demande de congé.
+ * 
+ * @returns {Promise<NextResponse>} - Une réponse HTTP contenant le résultat de la création
+ * de la demande de congé ou une erreur en cas d'échec.
+ * 
+ * @throws {401} - Si l'utilisateur n'est pas authentifié ou si le token est invalide/expiré.
+ * @throws {403} - Si l'utilisateur n'a pas les permissions nécessaires pour créer une demande.
+ * @throws {400} - Si les données fournies sont invalides ou si les dates ne respectent pas les règles.
+ * @throws {409} - Si la demande de congé entre en conflit avec des congés existants.
+ * @throws {500} - En cas d'erreur interne du serveur.
+ * 
+ * @example
+ * // Requête POST
+ * fetch('/api/leave-requests/create', {
+ *   method: 'POST',
+ *   headers: {
+ *     'Content-Type': 'application/json',
+ *     'Authorization': 'Bearer <token>'
+ *   },
+ *   body: JSON.stringify({
+ *     type: 'ANNUEL',
+ *     dateDebut: '2023-10-01T00:00:00.000Z',
+ *     dateFin: '2023-10-15T00:00:00.000Z',
+ *     commentaire: 'Vacances annuelles'
+ *   })
+ * });
+ * 
+ * @remarks
+ * - Les types de congés disponibles sont définis dans l'enum `TypeConge`.
+ * - Les jours ouvrés sont calculés en excluant les samedis et dimanches.
+ * - Une notification est envoyée à l'employé après la création de la demande.
+ * 
+ * @see {@link calculateWorkingDays} pour le calcul des jours ouvrés.
+ * @see {@link prisma.conge} pour la gestion des données de congés.
+ */
 // app/api/leave-requests/create/route.ts
+
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';

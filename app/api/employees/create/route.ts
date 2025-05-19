@@ -1,3 +1,60 @@
+
+
+/**
+ * @module API/Employees/Create
+ * 
+ * @description
+ * Cette API permet de créer un nouvel employé dans le système. Elle vérifie les permissions de l'utilisateur,
+ * valide les données d'entrée, et enregistre les informations de l'employé dans la base de données.
+ * 
+ * @function POST
+ * 
+ * @param {Request} request - La requête HTTP contenant les données de l'employé à créer.
+ * 
+ * @returns {NextResponse} - Une réponse HTTP contenant le statut de la création ou une erreur.
+ * 
+ * @throws {401 Unauthorized} - Si le token d'autorisation est manquant ou invalide.
+ * @throws {403 Forbidden} - Si l'utilisateur n'a pas les permissions nécessaires pour créer un employé.
+ * @throws {400 Bad Request} - Si les données fournies sont invalides ou incomplètes.
+ * @throws {409 Conflict} - Si un employé avec le même email existe déjà.
+ * @throws {500 Internal Server Error} - Si une erreur inattendue survient lors de la création.
+ * 
+ * @example
+ * // Requête HTTP POST
+ * POST /api/employees/create
+ * Headers:
+ * {
+ *   "Authorization": "Bearer <token>"
+ * }
+ * Body:
+ * {
+ *   "nom": "Dupont",
+ *   "prenom": "Jean",
+ *   "email": "jean.dupont@example.com",
+ *   "password": "password123",
+ *   "posteId": "123e4567-e89b-12d3-a456-426614174000",
+ *   "telephone": "0123456789",
+ *   "adresse": "123 Rue Exemple, Paris",
+ *   "role": "EMPLOYE_BASE",
+ *   "dateEmbauche": "2023-01-01T00:00:00.000Z",
+ *   "typeContrat": "CDI",
+ *   "dateDebutContrat": "2023-01-01T00:00:00.000Z",
+ *   "permissions": ["EMPLOYEE_VIEW"]
+ * }
+ * 
+ * @example
+ * // Réponse HTTP en cas de succès
+ * {
+ *   "message": "Employé créé avec succès",
+ *   "employeeId": "123e4567-e89b-12d3-a456-426614174001"
+ * }
+ * 
+ * @example
+ * // Réponse HTTP en cas d'erreur (email déjà utilisé)
+ * {
+ *   "error": "Un employé avec cet email existe déjà"
+ * }
+ */
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';

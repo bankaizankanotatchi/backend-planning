@@ -1,4 +1,40 @@
 
+/**
+ * Gère la déconnexion d'un utilisateur en révoquant son token d'authentification
+ * et en supprimant le cookie associé.
+ *
+ * @function POST
+ * @async
+ * 
+ * @param {Request} request - La requête HTTP entrante.
+ * 
+ * @returns {Promise<Response>} Une réponse JSON indiquant le succès ou l'échec de l'opération.
+ * 
+ * @throws {Error} Si une erreur se produit lors de la gestion de la déconnexion.
+ * 
+ * @description
+ * Cette fonction effectue les étapes suivantes :
+ * 1. Récupère le token d'authentification depuis les cookies ou le header Authorization.
+ * 2. Vérifie si le token est révoqué en consultant la base de données.
+ * 3. Si le token est valide, il est ajouté à une liste noire (table `revokedToken`).
+ * 4. Met à jour la date de dernière déconnexion (`lastLogout`) de l'employé dans la base de données.
+ * 5. Supprime le cookie `auth-token` côté serveur.
+ * 
+ * @example
+ * // Exemple d'utilisation :
+ * const response = await fetch('/api/auth/logout', {
+ *   method: 'POST',
+ *   headers: {
+ *     Authorization: 'Bearer <votre_token>'
+ *   }
+ * });
+ * const data = await response.json();
+ * console.log(data);
+ * 
+ * @response
+ * - Succès : `{ success: true, message: 'Déconnexion réussie', token: null }`
+ * - Échec : `{ success: false, message: 'Erreur lors de la déconnexion', error: '<message_erreur>' }`
+ */
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'

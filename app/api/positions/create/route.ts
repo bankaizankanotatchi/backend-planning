@@ -1,4 +1,41 @@
+/**
+ * Gestion de la création d'un poste via une API REST.
+ *
+ * @function POST
+ * @async
+ * @param {Request} request - La requête HTTP contenant les données du poste à créer.
+ * @returns {Promise<Response>} - Une réponse HTTP contenant les détails du poste créé ou une erreur.
+ *
+ * @description
+ * Cette fonction gère la création d'un poste en vérifiant d'abord l'autorisation de l'utilisateur
+ * via un token JWT. Elle valide ensuite les données envoyées dans le corps de la requête à l'aide
+ * de `zod`. Si un poste avec le même nom existe déjà, une erreur de conflit (409) est retournée.
+ * Sinon, un nouveau poste est créé dans la base de données Prisma.
+ *
+ * @throws {401 Unauthorized} - Si le token d'autorisation est manquant ou invalide.
+ * @throws {403 Forbidden} - Si l'utilisateur n'a pas les permissions nécessaires pour créer un poste.
+ * @throws {409 Conflict} - Si un poste avec le même nom existe déjà.
+ * @throws {500 Internal Server Error} - En cas d'erreur inattendue lors de la création du poste.
+ *
+ * @example
+ * // Requête HTTP POST
+ * const response = await fetch('/api/positions/create', {
+ *   method: 'POST',
+ *   headers: {
+ *     'Content-Type': 'application/json',
+ *     'Authorization': 'Bearer <votre_token>'
+ *   },
+ *   body: JSON.stringify({
+ *     nom: 'Développeur',
+ *     description: 'Responsable du développement des applications.'
+ *   })
+ * });
+ *
+ * @see {@link verifyToken} pour la vérification des permissions utilisateur.
+ * @see {@link prisma.poste} pour les opérations sur la base de données.
+ */
 // app/api/postes/create/route.ts
+
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth/jwt';
 import prisma from '@/lib/prisma';

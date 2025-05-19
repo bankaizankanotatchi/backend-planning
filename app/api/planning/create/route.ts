@@ -1,3 +1,55 @@
+
+/**
+ * @module API/Planning/Create
+ * @description API pour la création d'un planning avec gestion des créneaux, validation des données, 
+ * vérification des conflits et génération de synthèses horaires.
+ * 
+ * @function POST
+ * @async
+ * @param {Request} request - Requête HTTP contenant les données du planning à créer.
+ * @returns {Promise<NextResponse>} Réponse HTTP avec le statut et les données associées.
+ * 
+ * @throws {401} Si le token d'authentification est manquant ou invalide.
+ * @throws {403} Si l'utilisateur n'a pas les permissions nécessaires pour créer un planning.
+ * @throws {400} Si les données fournies ne respectent pas le schéma de validation.
+ * @throws {409} Si des conflits de créneaux sont détectés.
+ * @throws {500} En cas d'erreur interne lors de la création du planning.
+ * 
+ * @example
+ * // Requête POST
+ * const response = await fetch('/api/planning/create', {
+ *   method: 'POST',
+ *   headers: {
+ *     'Authorization': 'Bearer <token>',
+ *     'Content-Type': 'application/json'
+ *   },
+ *   body: JSON.stringify({
+ *     nom: "Planning 1",
+ *     dateDebut: "2023-10-01T08:00:00Z",
+ *     dateFin: "2023-10-07T18:00:00Z",
+ *     creneaux: [
+ *       {
+ *         employeeId: "123e4567-e89b-12d3-a456-426614174000",
+ *         tacheId: "123e4567-e89b-12d3-a456-426614174001",
+ *         dateDebut: "2023-10-01T08:00:00Z",
+ *         dateFin: "2023-10-01T12:00:00Z",
+ *         type: "TRAVAIL",
+ *         duree: 240
+ *       }
+ *     ]
+ *   })
+ * });
+ * 
+ * @remarks
+ * - Cette API nécessite un token JWT valide pour authentifier l'utilisateur.
+ * - Les permissions nécessaires incluent `PLANNING_CREATE` ou un accès complet.
+ * - Les données sont validées avec Zod avant d'être traitées.
+ * - Les conflits de créneaux sont vérifiés pour éviter les chevauchements.
+ * - Les synthèses horaires sont générées pour chaque employé impliqué dans le planning.
+ * 
+ * @see {@link /lib/prisma} pour l'intégration avec Prisma.
+ * @see {@link /lib/auth/jwt} pour la gestion des tokens JWT.
+ */
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';

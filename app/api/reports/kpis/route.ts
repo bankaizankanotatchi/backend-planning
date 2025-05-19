@@ -1,3 +1,88 @@
+
+/**
+ * Gestion des statistiques clés (KPIs) pour l'application de gestion de planning.
+ * Cette API récupère et calcule diverses métriques liées aux plannings, employés, tâches et congés.
+ *
+ * @function GET
+ * @param {Request} request - La requête HTTP entrante.
+ * @returns {Promise<NextResponse>} Une réponse JSON contenant les statistiques ou une erreur.
+ *
+ * @description
+ * Cette fonction effectue les étapes suivantes :
+ * 1. Vérifie la présence et la validité du token d'autorisation.
+ * 2. Vérifie les permissions de l'utilisateur pour accéder aux statistiques.
+ * 3. Récupère les données nécessaires depuis la base de données Prisma en parallèle :
+ *    - Nombre total de plannings.
+ *    - Nombre total d'employés.
+ *    - Nombre d'employés actifs.
+ *    - Détails des plannings avec créneaux et synthèses.
+ *    - Statistiques des tâches par statut.
+ *    - Employé avec le plus de tâches terminées.
+ *    - Employés ayant des tâches en attente ou en cours.
+ *    - Statistiques des congés par statut.
+ * 4. Calcule des statistiques supplémentaires :
+ *    - Statistiques des plannings (nombre de créneaux et tâches validées).
+ *    - Pourcentages des tâches par statut.
+ *    - Pourcentages des congés par statut.
+ *    - Formatage des employés avec le plus de tâches terminées.
+ *    - Formatage des employés ayant des tâches en attente ou en cours.
+ * 5. Construit et retourne une réponse JSON contenant toutes les statistiques calculées.
+ *
+ * @throws {Error} Retourne une erreur JSON avec un statut HTTP approprié en cas de :
+ * - Absence ou invalidité du token d'autorisation (401).
+ * - Permissions insuffisantes pour accéder aux statistiques (403).
+ * - Erreur interne lors de la récupération ou du traitement des données (500).
+ *
+ * @example
+ * // Exemple de réponse JSON en cas de succès :
+ * {
+ *   "plannings": {
+ *     "total": 10,
+ *     "details": [
+ *       {
+ *         "id": 1,
+ *         "nom": "Planning A",
+ *         "totalCreneaux": 5,
+ *         "tachesTerminees": 3
+ *       }
+ *     ]
+ *   },
+ *   "employees": {
+ *     "total": 50,
+ *     "actifs": 45,
+ *     "pourcentageActifs": 90
+ *   },
+ *   "taches": [
+ *     {
+ *       "statut": "TERMINEE",
+ *       "count": 30,
+ *       "percentage": 60
+ *     }
+ *   ],
+ *   "topEmployee": {
+ *     "id": 2,
+ *     "nom": "Dupont",
+ *     "prenom": "Jean",
+ *     "tachesTerminees": 10
+ *   },
+ *   "employeesWithPendingTasks": [
+ *     {
+ *       "id": 3,
+ *       "nom": "Martin",
+ *       "prenom": "Claire",
+ *       "tachesEnAttente": 2,
+ *       "tachesEnCours": 1
+ *     }
+ *   ],
+ *   "conges": [
+ *     {
+ *       "statut": "APPROUVE",
+ *       "count": 5,
+ *       "percentage": 50
+ *     }
+ *   ]
+ * }
+ */
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';

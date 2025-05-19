@@ -1,3 +1,45 @@
+
+/**
+ * @function GET
+ * @async
+ * @description
+ * Cette fonction génère un rapport Excel contenant plusieurs feuilles de données liées à la gestion des employés, 
+ * des plannings, des tâches et des congés. Le fichier Excel est ensuite renvoyé en tant que réponse téléchargeable.
+ * 
+ * @param {Request} request - L'objet de requête HTTP contenant les en-têtes et les informations nécessaires.
+ * 
+ * @returns {Promise<NextResponse>} Une réponse HTTP contenant le fichier Excel en tant que pièce jointe ou un message d'erreur.
+ * 
+ * @throws {Error} Renvoie une erreur si la génération du rapport échoue ou si les permissions sont insuffisantes.
+ * 
+ * @remarks
+ * - La fonction vérifie d'abord la validité du token JWT et les permissions de l'utilisateur.
+ * - Elle utilise `ExcelJS` pour créer un fichier Excel avec plusieurs feuilles :
+ *   1. **Résumé** : Contient des indicateurs clés comme le nombre total d'employés, de plannings, de tâches, etc.
+ *   2. **Plannings** : Liste des plannings avec leurs détails.
+ *   3. **Employés** : Liste des employés avec leurs informations et tâches terminées.
+ *   4. **Tâches** : Liste des tâches avec leurs détails.
+ *   5. **Congés** : Liste des congés avec leurs informations.
+ * - Les données sont récupérées depuis une base de données via Prisma.
+ * - Les colonnes des feuilles Excel sont automatiquement ajustées pour une meilleure lisibilité.
+ * 
+ * @example
+ * // Exemple d'appel de l'API
+ * fetch('/api/reports/export-excel', {
+ *   method: 'GET',
+ *   headers: {
+ *     'Authorization': 'Bearer <votre_token>'
+ *   }
+ * })
+ * .then(response => response.blob())
+ * .then(blob => {
+ *   const url = window.URL.createObjectURL(blob);
+ *   const a = document.createElement('a');
+ *   a.href = url;
+ *   a.download = 'rapport_employes.xlsx';
+ *   a.click();
+ * });
+ */
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';

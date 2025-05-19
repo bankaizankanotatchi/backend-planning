@@ -1,3 +1,42 @@
+
+
+/**
+ * Gestionnaire pour la méthode GET de l'API permettant de récupérer tous les plannings.
+ *
+ * @param request - L'objet Request représentant la requête HTTP entrante.
+ * 
+ * @returns Une réponse JSON contenant la liste des plannings formatés ou un message d'erreur.
+ *
+ * ### Étapes :
+ * 1. **Vérification de l'authentification** :
+ *    - Extrait le token JWT de l'en-tête `Authorization`.
+ *    - Retourne une erreur 401 si le token est absent.
+ *
+ * 2. **Vérification des permissions** :
+ *    - Décode le token JWT pour récupérer les permissions de l'utilisateur.
+ *    - Vérifie si l'utilisateur possède la permission `PLANNING_READ` ou un accès complet.
+ *    - Retourne une erreur 403 si les permissions sont insuffisantes.
+ *
+ * 3. **Récupération des plannings** :
+ *    - Utilise Prisma pour récupérer tous les plannings avec leurs relations essentielles :
+ *      - `createur` : Informations sur le créateur du planning.
+ *      - `periode` : Dates de début et de fin du planning.
+ *      - `_count` : Nombre de créneaux et de synthèses associés.
+ *    - Trie les plannings par date de création (ordre décroissant).
+ *
+ * 4. **Formatage de la réponse** :
+ *    - Formate les données pour inclure le nom complet du créateur et les dates de la période.
+ *    - Retourne les plannings formatés sous forme de réponse JSON.
+ *
+ * ### Gestion des erreurs :
+ * - Retourne une erreur 500 avec un message détaillé en mode développement si une exception est levée.
+ *
+ * ### Codes de statut HTTP possibles :
+ * - `200` : Succès, liste des plannings retournée.
+ * - `401` : Authentification requise.
+ * - `403` : Permissions insuffisantes.
+ * - `500` : Erreur serveur.
+ */
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';

@@ -1,4 +1,48 @@
+/**
+ * Gère l'inscription d'un nouvel employé.
+ *
+ * @function
+ * @async
+ * @param {Request} request - La requête HTTP contenant les données d'inscription au format JSON.
+ * @returns {Promise<NextResponse>} Une réponse HTTP contenant les informations de l'employé créé
+ * ou un message d'erreur en cas d'échec.
+ *
+ * @description
+ * Cette fonction permet de créer un nouvel employé dans la base de données. Elle effectue les étapes suivantes :
+ * 1. Valide les données d'entrée à l'aide de Zod.
+ * 2. Vérifie si un employé avec le même email existe déjà.
+ * 3. Gère les dates d'embauche et de contrat.
+ * 4. Hache le mot de passe de l'employé.
+ * 5. Crée un nouvel employé avec des permissions et un contrat par défaut.
+ * 6. Génère un token JWT pour l'employé et le stocke dans un cookie sécurisé.
+ *
+ * @throws {z.ZodError} Si les données d'entrée ne respectent pas le schéma de validation.
+ * @throws {Error} Si une erreur inattendue survient lors de l'exécution.
+ *
+ * @example
+ * // Exemple de requête JSON pour l'inscription :
+ * const requestBody = {
+ *   nom: "Dupont",
+ *   prenom: "Jean",
+ *   email: "jean.dupont@example.com",
+ *   password: "Password123!",
+ *   posteId: "123e4567-e89b-12d3-a456-426614174000",
+ *   telephone: "0123456789",
+ *   adresse: "123 Rue Exemple, Paris",
+ *   dateEmbauche: "2023-01-01T00:00:00.000Z",
+ *   typeContrat: "CDD",
+ *   dateDebutContrat: "2023-01-01T00:00:00.000Z",
+ *   dateFinContrat: "2023-12-31T00:00:00.000Z"
+ * };
+ *
+ * @response
+ * - En cas de succès (201) : Retourne les informations de l'employé créé (sans données sensibles).
+ * - En cas de conflit (409) : Retourne une erreur si un employé avec le même email existe déjà.
+ * - En cas de validation échouée (400) : Retourne les détails des erreurs de validation.
+ * - En cas d'erreur serveur (500) : Retourne un message d'erreur générique.
+ */
 // app/api/auth/register/route.ts
+
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';

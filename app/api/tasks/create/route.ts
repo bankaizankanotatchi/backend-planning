@@ -1,4 +1,59 @@
+/**
+ * Gestionnaire pour la création d'une tâche via une requête HTTP POST.
+ * 
+ * @param request - L'objet Request contenant les données de la requête.
+ * 
+ * @returns Une réponse JSON contenant les détails de la tâche créée ou une erreur.
+ * 
+ * ### Étapes du traitement :
+ * 1. **Authentification** :
+ *    - Vérifie la présence et la validité du token JWT dans l'en-tête `Authorization`.
+ *    - Retourne une erreur 401 si le token est manquant ou invalide.
+ * 
+ * 2. **Vérification des permissions** :
+ *    - Vérifie si l'utilisateur a la permission `TASK_CREATE` ou un accès complet.
+ *    - Retourne une erreur 403 si l'utilisateur n'a pas les permissions nécessaires.
+ * 
+ * 3. **Validation des données** :
+ *    - Valide les données du corps de la requête à l'aide du schéma Zod `taskSchema`.
+ *    - Retourne une erreur 400 si les données sont invalides.
+ * 
+ * 4. **Vérification de l'employé assigné** :
+ *    - Vérifie si l'employé assigné existe dans la base de données.
+ *    - Retourne une erreur 404 si l'employé n'est pas trouvé.
+ * 
+ * 5. **Vérification des dates (optionnelle)** :
+ *    - Vérifie que la date limite n'est pas dans le passé.
+ *    - Retourne une erreur 400 si la date limite est invalide.
+ * 
+ * 6. **Création de la tâche** :
+ *    - Crée une nouvelle tâche dans la base de données avec les données validées.
+ *    - Inclut les informations de l'employé assigné dans la réponse.
+ * 
+ * 7. **Création d'une notification** :
+ *    - Crée une notification pour informer l'employé de la nouvelle tâche assignée.
+ * 
+ * ### Réponses possibles :
+ * - **201** : Tâche créée avec succès. Retourne les détails de la tâche.
+ * - **400** : Données invalides ou date limite dans le passé.
+ * - **401** : Authentification requise ou token invalide.
+ * - **403** : Permissions insuffisantes.
+ * - **404** : Employé assigné non trouvé.
+ * - **500** : Erreur interne du serveur.
+ * 
+ * ### Exemple de corps de requête attendu :
+ * ```json
+ * {
+ *   "label": "Nom de la tâche",
+ *   "description": "Description de la tâche (optionnel)",
+ *   "dateLimite": "2023-12-31T23:59:59.000Z",
+ *   "employeeId": "uuid-de-lemploye",
+ *   "statut": "A_FAIRE"
+ * }
+ * ```
+ */
 // app/api/tasks/create/route.ts
+
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';

@@ -1,3 +1,51 @@
+
+
+/**
+ * @module AssignPermissionAPI
+ * @description API pour assigner une permission à un rôle spécifique dans le système.
+ * 
+ * @function POST
+ * @async
+ * 
+ * @param {Request} request - La requête HTTP contenant les informations nécessaires pour assigner une permission.
+ * 
+ * @returns {Promise<NextResponse>} Une réponse HTTP indiquant le succès ou l'échec de l'opération.
+ * 
+ * @throws {NextResponse} - Retourne une réponse avec un code d'erreur et un message en cas d'échec.
+ * 
+ * @example
+ * // Exemple de corps de requête JSON attendu :
+ * {
+ *   "role": "MANAGER",
+ *   "permission": "PERMISSION_MANAGE"
+ * }
+ * 
+ * @remarks
+ * - Cette API vérifie d'abord si l'utilisateur est authentifié et possède les permissions nécessaires 
+ *   pour gérer les permissions (`PERMISSION_MANAGE` ou accès complet).
+ * - Elle valide ensuite les données reçues à l'aide de `zod`.
+ * - Si la permission est déjà attribuée au rôle, une erreur est retournée.
+ * - Si l'attribution échoue pour une raison quelconque, une erreur est également retournée.
+ * - En cas de succès, la permission est ajoutée au rôle et mise à jour dans la base de données pour 
+ *   tous les employés ayant ce rôle.
+ * 
+ * @error {401 Unauthorized} - Si le token d'authentification est manquant ou invalide.
+ * @error {403 Forbidden} - Si l'utilisateur n'a pas les permissions nécessaires.
+ * @error {400 Bad Request} - Si les données fournies sont invalides ou si la permission est déjà attribuée.
+ * @error {500 Internal Server Error} - En cas d'erreur inattendue lors de l'exécution.
+ * 
+ * @returns {Object} Réponse JSON :
+ * - En cas de succès :
+ *   {
+ *     "message": "Permission assignée avec succès au rôle",
+ *     "affectedEmployees": 42
+ *   }
+ * - En cas d'erreur :
+ *   {
+ *     "error": "Message d'erreur",
+ *     "details": [ ... ] // Optionnel, détails des erreurs de validation
+ *   }
+ */
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';

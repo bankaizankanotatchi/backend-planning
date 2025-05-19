@@ -1,3 +1,27 @@
+
+
+/**
+ * Supprime (archive) un employé en le marquant comme inactif.
+ * 
+ * @param request - L'objet `NextRequest` contenant les informations de la requête HTTP.
+ * @param params - Les paramètres de la requête, incluant l'identifiant de l'employé à supprimer.
+ * 
+ * @returns Une réponse JSON indiquant le succès ou l'échec de l'opération.
+ * 
+ * @throws {401} Si le token d'authentification est manquant ou invalide.
+ * @throws {403} Si l'utilisateur authentifié n'a pas les permissions nécessaires pour modifier un employé.
+ * @throws {404} Si l'employé avec l'identifiant fourni n'existe pas.
+ * @throws {400} Si l'employé a des dépendances (par exemple, des plannings créés) empêchant sa suppression.
+ * @throws {500} En cas d'erreur inattendue lors de l'archivage de l'employé.
+ * 
+ * ### Étapes de l'opération :
+ * 1. Vérification de l'authentification et des permissions de l'utilisateur.
+ * 2. Vérification de l'existence de l'employé dans la base de données.
+ * 3. Vérification des dépendances métier (par exemple, plannings créés par l'employé).
+ * 4. Suppression logique de l'employé via une transaction Prisma :
+ *    - L'employé est marqué comme inactif (`isActive: false`) et une date de fin (`dateFin`) est ajoutée.
+ * 5. Retourne une réponse JSON avec un message de succès ou une erreur détaillée.
+ */
 import { NextResponse,NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';

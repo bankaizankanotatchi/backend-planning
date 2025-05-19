@@ -1,3 +1,31 @@
+
+/**
+ * Marque une notification comme lue pour un utilisateur spécifique.
+ * 
+ * @param request - L'objet de requête HTTP contenant les en-têtes et les données nécessaires.
+ * @param params - Les paramètres de la route, incluant l'identifiant de la notification (`id`).
+ * 
+ * @returns Une réponse JSON indiquant le succès ou l'échec de l'opération.
+ * 
+ * @throws {401 Unauthorized} Si le token d'autorisation est manquant ou invalide.
+ * @throws {400 Bad Request} Si l'ID de la notification est manquant ou invalide.
+ * @throws {404 Not Found} Si la notification n'existe pas ou si l'utilisateur n'a pas les permissions nécessaires.
+ * @throws {500 Internal Server Error} En cas d'erreur serveur inattendue.
+ * 
+ * ### Fonctionnement :
+ * 1. Vérifie la présence et la validité du token d'autorisation.
+ * 2. Valide l'ID de la notification fourni dans les paramètres.
+ * 3. Vérifie si la notification existe et si elle appartient à l'utilisateur authentifié.
+ * 4. Si la notification n'est pas déjà marquée comme lue, elle est mise à jour avec le statut `LUE`.
+ * 5. Si la notification est déjà marquée comme lue, elle est retournée telle quelle.
+ * 
+ * ### Réponses possibles :
+ * - **Succès (200)** : La notification est marquée comme lue ou déjà lue, avec les détails de la notification.
+ * - **Erreur (401)** : L'utilisateur n'est pas autorisé.
+ * - **Erreur (400)** : L'ID de la notification est invalide.
+ * - **Erreur (404)** : La notification est introuvable ou l'utilisateur n'a pas les permissions nécessaires.
+ * - **Erreur (500)** : Une erreur serveur s'est produite.
+ */
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';

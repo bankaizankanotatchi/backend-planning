@@ -1,4 +1,28 @@
+/**
+ * Supprime une tâche spécifique en fonction de son ID.
+ *
+ * @param request - L'objet de requête HTTP contenant les informations nécessaires.
+ * @param params - Les paramètres de la requête, incluant l'ID de la tâche à supprimer.
+ * 
+ * @returns Une réponse JSON indiquant le succès ou l'échec de l'opération.
+ *
+ * @throws {401} Si l'utilisateur n'est pas authentifié ou si le token est invalide/expiré.
+ * @throws {403} Si l'utilisateur n'a pas les permissions nécessaires pour supprimer une tâche.
+ * @throws {400} Si l'ID de la tâche est manquant ou si la tâche est associée à des créneaux.
+ * @throws {404} Si la tâche spécifiée n'existe pas.
+ * @throws {500} En cas d'erreur interne du serveur lors de la suppression de la tâche.
+ *
+ * ### Étapes de traitement :
+ * 1. **Authentification** : Vérifie la présence et la validité du token JWT.
+ * 2. **Vérification des permissions** : S'assure que l'utilisateur a les droits nécessaires pour supprimer une tâche.
+ * 3. **Validation de l'ID** : Vérifie que l'ID de la tâche est fourni.
+ * 4. **Vérification de l'existence de la tâche** : Confirme que la tâche existe dans la base de données.
+ * 5. **Vérification des créneaux associés** : Empêche la suppression si la tâche est liée à des créneaux.
+ * 6. **Suppression de la tâche** : Supprime la tâche de la base de données.
+ * 7. **Notification** : Envoie une notification à l'employé assigné à la tâche supprimée.
+ */
 // app/api/tasks/delete/[id]/route.ts
+
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';

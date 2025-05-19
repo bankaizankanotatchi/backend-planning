@@ -1,3 +1,49 @@
+
+/**
+ * @function GET
+ * @description Génère un rapport PDF contenant des statistiques sur les employés, les tâches, les plannings et les congés.
+ * Cette API vérifie les permissions de l'utilisateur avant de générer le rapport.
+ * 
+ * @param {Request} request - La requête HTTP entrante.
+ * 
+ * @returns {Promise<NextResponse>} Une réponse contenant le fichier PDF généré ou un message d'erreur en cas de problème.
+ * 
+ * @throws {NextResponse} - Retourne une réponse avec un statut HTTP 401 si l'utilisateur n'est pas authentifié,
+ * ou 403 si les permissions sont insuffisantes. En cas d'erreur interne, retourne une réponse avec un statut 500.
+ * 
+ * @details
+ * - **Vérification des permissions** : L'utilisateur doit posséder la permission `TEAM_VIEW_STATS` ou avoir un accès complet.
+ * - **Contenu du rapport** :
+ *   1. Résumé général : Nombre total d'employés, employés actifs, plannings, tâches et congés.
+ *   2. Statistiques des tâches : Répartition des tâches par statut.
+ *   3. Top employés : Les 3 employés ayant terminé le plus de tâches.
+ *   4. Statistiques des congés : Répartition des congés par statut.
+ *   5. Derniers plannings : Liste des 5 derniers plannings créés avec le nombre de créneaux associés.
+ * - **Format PDF** : Le rapport est généré au format A4 avec des styles personnalisés (titres, sous-titres, texte).
+ * 
+ * @example
+ * // Exemple d'appel à l'API
+ * fetch('/api/reports/export-pdf', {
+ *   method: 'GET',
+ *   headers: {
+ *     'Authorization': 'Bearer <token>',
+ *   },
+ * })
+ * .then(response => {
+ *   if (response.ok) {
+ *     return response.blob();
+ *   } else {
+ *     throw new Error('Erreur lors de la génération du rapport');
+ *   }
+ * })
+ * .then(blob => {
+ *   const url = window.URL.createObjectURL(blob);
+ *   const a = document.createElement('a');
+ *   a.href = url;
+ *   a.download = 'rapport_employes.pdf';
+ *   a.click();
+ * });
+ */
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';

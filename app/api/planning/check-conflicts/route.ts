@@ -1,3 +1,84 @@
+
+/**
+ * @module API/Planning/CheckConflicts
+ * 
+ * @description
+ * Cette API permet de vérifier les conflits potentiels avant d'ajouter ou de modifier un créneau dans un planning.
+ * Elle garantit qu'un employé n'est pas déjà affecté à une autre tâche sur la même plage horaire, qu'il est disponible
+ * selon ses heures de travail habituelles, et qu'il n'est pas en congé.
+ * 
+ * @function POST
+ * 
+ * @param {Request} request - La requête HTTP contenant les données nécessaires pour vérifier les conflits.
+ * 
+ * @returns {Promise<Response>} Une réponse JSON structurée contenant :
+ * - `hasConflicts` (boolean) : Indique si des conflits ont été détectés.
+ * - `conflicts` (Array) : Liste des créneaux en conflit (planning, tâche, période).
+ * - `availability` (Object) : Statut de disponibilité de l'employé.
+ * - `leaveStatus` (Object) : Indique si l'employé est en congé.
+ * 
+ * @throws {Error} Retourne une erreur avec un code HTTP approprié :
+ * - 401 : Authentification requise.
+ * - 403 : Permissions insuffisantes.
+ * - 400 : Données invalides (erreur de validation).
+ * - 500 : Erreur interne du serveur.
+ * 
+ * @example
+ * ### Requête
+ * ```json
+ * {
+ *   "employeeId": "123e4567-e89b-12d3-a456-426614174000",
+ *   "dateDebut": "2023-10-01T08:00:00Z",
+ *   "dateFin": "2023-10-01T12:00:00Z",
+ *   "ignoreCreneauId": "987e6543-e21b-45c6-b789-123456789abc",
+ *   "planningId": "456e7890-e12d-34c5-a678-987654321def"
+ * }
+ * ```
+ * 
+ * ### Réponse
+ * ```json
+ * {
+ *   "hasConflicts": true,
+ *   "conflicts": [
+ *     {
+ *       "creneauId": "abc123-def456-ghi789",
+ *       "creneauType": "TRAVAIL",
+ *       "planningId": "xyz987",
+ *       "planningName": "Planning A",
+ *       "planningStatus": "ACTIF",
+ *       "tache": "Tâche 1",
+ *       "periode": {
+ *         "debut": "2023-10-01T09:00:00Z",
+ *         "fin": "2023-10-01T11:00:00Z"
+ *       },
+ *       "conflictType": "CRENEAU"
+ *     }
+ *   ],
+ *   "availability": {
+ *     "status": "DISPONIBLE",
+ *     "periode": {
+ *       "debut": "08:00:00",
+ *       "fin": "17:00:00"
+ *     }
+ *   },
+ *   "leaveStatus": {
+ *     "status": "AUCUN_CONGE"
+ *   }
+ * }
+ * ```
+ * 
+ * @remarks
+ * ### Paramètres de la requête
+ * - `employeeId` (Obligatoire) : Identifiant unique de l'employé.
+ * - `dateDebut` et `dateFin` (Obligatoires) : Plage horaire à vérifier.
+ * - `ignoreCreneauId` (Optionnel) : Exclut un créneau spécifique de la vérification (utile pour les mises à jour).
+ * - `planningId` (Optionnel) : Exclut les créneaux du même planning pour éviter les faux conflits internes.
+ * 
+ * ### Cas d'utilisation
+ * - Avant la création d'un créneau : Vérifier qu'un employé est disponible.
+ * - Avant une mise à jour : Vérifier qu'un changement d'horaire ne crée pas de conflit.
+ * - Optimisation des plannings : Éviter les doubles réservations ou les erreurs de gestion.
+ */
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';

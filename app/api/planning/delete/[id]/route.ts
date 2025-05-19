@@ -1,3 +1,44 @@
+
+
+/**
+ * Supprime un planning spécifique en fonction de son identifiant.
+ * 
+ * @async
+ * @function DELETE
+ * @param {Request} request - L'objet de requête HTTP contenant les informations nécessaires.
+ * @param {Object} context - Contexte contenant les paramètres de la requête.
+ * @param {Promise<{ id: string }>} context.params - Les paramètres de la requête, incluant l'identifiant du planning à supprimer.
+ * 
+ * @returns {Promise<Response>} Une réponse HTTP indiquant le résultat de l'opération.
+ * 
+ * @throws {Error} Retourne une erreur HTTP dans les cas suivants :
+ * - 401 : Si le token d'authentification est manquant ou invalide.
+ * - 403 : Si l'utilisateur n'a pas les permissions nécessaires ou si le planning est publié.
+ * - 404 : Si le planning avec l'identifiant spécifié n'existe pas.
+ * - 500 : En cas d'erreur interne lors de la suppression.
+ * 
+ * @description
+ * Cette fonction effectue les étapes suivantes :
+ * 1. Vérifie l'authentification et les permissions de l'utilisateur via un token JWT.
+ * 2. Vérifie l'existence du planning et récupère ses dépendances (créneaux, synthèses, période).
+ * 3. Vérifie les contraintes métier, notamment si le planning est publié.
+ * 4. Supprime le planning et ses dépendances associées dans une transaction :
+ *    - Supprime les créneaux associés.
+ *    - Supprime les synthèses horaires associées.
+ *    - Supprime le planning lui-même.
+ *    - Supprime la période associée si elle n'est pas utilisée ailleurs.
+ * 5. Retourne une réponse de succès avec des détails sur les éléments supprimés.
+ * 
+ * @example
+ * // Requête HTTP DELETE
+ * fetch('/api/planning/delete/123', {
+ *   method: 'DELETE',
+ *   headers: {
+ *     'Authorization': 'Bearer <token>'
+ *   }
+ * }).then(response => response.json())
+ *   .then(data => console.log(data));
+ */
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';
