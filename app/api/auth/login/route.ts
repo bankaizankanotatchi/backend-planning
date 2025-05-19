@@ -69,7 +69,8 @@
  *     "token": "jwt-token"
  *   }
  * }
- */import { NextResponse } from 'next/server';
+ */
+import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { signToken } from '@/lib/auth/jwt';
 import { z } from 'zod';
@@ -98,22 +99,18 @@ export async function POST(request: Request) {
     });
 
     if (!employee) {
-      const response = NextResponse.json(
+      return NextResponse.json(
         { error: 'Identifiants incorrects' },
         { status: 401 }
       );
-      setCorsHeaders(response);
-      return response;
     }
 
     const passwordValid = await bcrypt.compare(password, employee.passwordHash);
     if (!passwordValid) {
-      const response = NextResponse.json(
+      return NextResponse.json(
         { error: 'Identifiants incorrects' },
         { status: 401 }
       );
-      setCorsHeaders(response);
-      return response;
     }
 
     const permissions = employee.permissions.map(p => p.permission);
@@ -133,10 +130,10 @@ export async function POST(request: Request) {
       poste: employee.poste?.nom,
       permissions,
       hasAllAccess: permissions.includes('ALL_ACCESS'),
-      token
+      token // On retourne le token dans la réponse JSON
     };
 
-    const response = NextResponse.json(
+    return NextResponse.json(
       { 
         message: 'Connexion réussie',
         employee: responseData 
@@ -144,34 +141,11 @@ export async function POST(request: Request) {
       { status: 200 }
     );
 
-    setCorsHeaders(response);
-    return response;
-
   } catch (error) {
     console.error('Erreur de connexion:', error);
-    const response = NextResponse.json(
+    return NextResponse.json(
       { error: 'Erreur lors de la connexion' },
       { status: 500 }
     );
-    setCorsHeaders(response);
-    return response;
   }
-}
-
-// Gestion des requêtes OPTIONS (préflight CORS)
-export async function OPTIONS() {
-  const response = new Response(null, { status: 204 });
-  setCorsHeaders(response);
-  return response;
-}
-
-// Fonction utilitaire pour définir les en-têtes CORS
-function setCorsHeaders(response: Response | NextResponse) {
-  response.headers.set('Access-Control-Allow-Origin', process.env.NODE_ENV === 'development' 
-    ? 'http://localhost:3000' 
-    //: 'https://votre-frontend.com');
-    :'http://localhost:3000');
-  response.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  response.headers.set('Access-Control-Allow-Credentials', 'true');
 }

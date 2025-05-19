@@ -69,33 +69,28 @@
 //     );
 //   }
 // }
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+
+
+
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  // Ensure you're only using Edge-compatible APIs
-  const pathname = request.nextUrl.pathname
-  
-  // Example: Protect dashboard routes
-  if (pathname.startsWith('/recomandatio')) {
-    const token = request.cookies.get('authToken')?.value
-    
-    if (!token) {
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
-  }
+  const response = NextResponse.next();
+  const origin = request.headers.get('origin');
 
-  return NextResponse.next()
+  response.headers.set('Access-Control-Allow-Origin', 
+    process.env.NODE_ENV === 'development'
+      ? 'http://localhost:3000'
+      : origin || 'https://votre-frontend.com'
+  );
+  response.headers.set('Access-Control-Allow-Credentials', 'true');
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  return response;
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
-  ],
-}
+  matcher: '/api/:path*',
+};
