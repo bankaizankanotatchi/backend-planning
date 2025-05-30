@@ -82,7 +82,7 @@ export function middleware(request: NextRequest) {
   response.headers.set('Access-Control-Allow-Origin', 
     process.env.NODE_ENV === 'development'
       ? 'http://localhost:3000'
-      : origin || 'https://votre-frontend.com'
+      : origin || 'https://frontend-planning.vercel.app'
   );
   response.headers.set('Access-Control-Allow-Credentials', 'true');
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
