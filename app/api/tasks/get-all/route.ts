@@ -77,23 +77,23 @@ export async function GET(request: Request) {
     // 2. Vérification des permissions
     const isAdmin = decoded.hasAllAccess;
     const canViewAllTasks = decoded.permissions.includes('TASK_VIEW_ALL');
-    const isRegularUser = decoded.permissions.includes('TASK_VIEW_OWN');
+    // const isRegularUser = decoded.permissions.includes('TASK_VIEW_OWN');
 
-    if (!isAdmin && !canViewAllTasks && !isRegularUser) {
-      return NextResponse.json(
-        { error: 'Permissions insuffisantes' },
-        { status: 403 }
-      );
-    }
+    // if (!isAdmin && !canViewAllTasks && !isRegularUser) {
+    //   return NextResponse.json(
+    //     { error: 'Permissions insuffisantes' },
+    //     { status: 403 }
+    //   );
+    // }
 
     // 3. Détermination du scope des données
-    const whereClause = isAdmin || canViewAllTasks 
-      ? {} 
-      : { employeeId: decoded.employeeId };
+    // const whereClause = isAdmin || canViewAllTasks 
+    //   ? {} 
+    //   : { employeeId: decoded.employeeId };
 
     // 4. Récupération des tâches avec les relations nécessaires
     const tasks = await prisma.tache.findMany({
-      where: whereClause,
+      //where: whereClause,
       take: 1000, // Limite raisonnable pour le front-end
       select: {
         id: true,

@@ -49,8 +49,7 @@
  * 
  * @see {@link /lib/prisma} pour l'intégration avec Prisma.
  * @see {@link /lib/auth/jwt} pour la gestion des tokens JWT.
- */
-import { NextResponse } from 'next/server';
+ */import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';
 import { EnumPermission, StatutValidation, TypeCreneau } from '@prisma/client';
@@ -93,8 +92,8 @@ export async function POST(request: Request) {
     const body = await request.json();
     const validatedData = createPlanningSchema.parse(body);
 
-    // 3. Vérification des conflits de créneaux
-    const conflicts = await checkCreneauConflicts(validatedData.creneaux);
+    // 3. Vérification des conflits de créneaux (optimisée)
+    const conflicts = await checkCreneauConflictsOptimized(validatedData.creneaux);
     if (conflicts.length > 0) {
       return NextResponse.json(
         { 
@@ -106,7 +105,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // 4. Création en transaction
+    // 4. Création en transaction avec timeout augmenté
     const newPlanning = await prisma.$transaction(async (prisma) => {
       // a. Création de la période
       const dateRange = await prisma.dateRange.create({
@@ -142,10 +141,13 @@ export async function POST(request: Request) {
         }))
       });
 
-      // d. Création des synthèses horaires
-      await createSyntheses(prisma, planning.id, validatedData.creneaux);
+      // d. Création des synthèses horaires (optimisée)
+      await createSynthesesOptimized(prisma, planning.id, validatedData.creneaux);
 
       return planning;
+    }, {
+      timeout: 15000, // 15 secondes au lieu de 5
+      maxWait: 20000  // Temps d'attente maximum pour acquérir la transaction
     });
 
     // 5. Réponse succès
@@ -181,20 +183,29 @@ export async function POST(request: Request) {
   }
 }
 
-// Fonction pour vérifier les conflits de créneaux
-async function checkCreneauConflicts(creneaux: any[]) {
+// Fonction optimisée pour vérifier les conflits de créneaux
+async function checkCreneauConflictsOptimized(creneaux: any[]) {
   const conflicts = [];
-
+  
+  // Grouper par employé pour optimiser les requêtes
+  const employeeGroups = new Map<string, any[]>();
   for (const creneau of creneaux) {
+    if (!employeeGroups.has(creneau.employeeId)) {
+      employeeGroups.set(creneau.employeeId, []);
+    }
+    employeeGroups.get(creneau.employeeId)!.push(creneau);
+  }
+
+  // Vérifier les conflits par employé
+  for (const [employeeId, employeeCreneaux] of employeeGroups) {
+    const dateDebut = Math.min(...employeeCreneaux.map(c => new Date(c.dateDebut).getTime()));
+    const dateFin = Math.max(...employeeCreneaux.map(c => new Date(c.dateFin).getTime()));
+
     const existing = await prisma.creneau.findMany({
       where: {
-        employeeId: creneau.employeeId,
-        OR: [
-          {
-            dateDebut: { lt: new Date(creneau.dateFin) },
-            dateFin: { gt: new Date(creneau.dateDebut) }
-          }
-        ]
+        employeeId: employeeId,
+        dateDebut: { lt: new Date(dateFin) },
+        dateFin: { gt: new Date(dateDebut) }
       },
       include: {
         planning: { select: { nom: true } },
@@ -203,25 +214,38 @@ async function checkCreneauConflicts(creneaux: any[]) {
     });
 
     if (existing.length > 0) {
-      conflicts.push({
-        employeeId: creneau.employeeId,
-        creneauPropose: creneau,
-        conflits: existing
-      });
+      // Vérifier les conflits spécifiques pour chaque créneau
+      for (const creneau of employeeCreneaux) {
+        const creneauConflicts = existing.filter(ex => 
+          new Date(ex.dateDebut) < new Date(creneau.dateFin) &&
+          new Date(ex.dateFin) > new Date(creneau.dateDebut)
+        );
+
+        if (creneauConflicts.length > 0) {
+          conflicts.push({
+            employeeId: creneau.employeeId,
+            creneauPropose: creneau,
+            conflits: creneauConflicts
+          });
+        }
+      }
     }
   }
 
   return conflicts;
 }
 
-// Fonction pour créer les synthèses horaires
-async function createSyntheses(prisma: any, planningId: string, creneaux: any[]) {
+// Fonction optimisée pour créer les synthèses horaires
+async function createSynthesesOptimized(prisma: any, planningId: string, creneaux: any[]) {
   const employeesMap = new Map<string, { heuresNormales: number, heuresSupplementaires: number }>();
 
   // Calcul des heures par employé
   for (const creneau of creneaux) {
     const durationHours = creneau.duree / 60;
-    const employeeData = employeesMap.get(creneau.employeeId) || { heuresNormales: 0, heuresSupplementaires: 0 };
+    const employeeData = employeesMap.get(creneau.employeeId) || { 
+      heuresNormales: 0, 
+      heuresSupplementaires: 0 
+    };
     
     // Logique pour déterminer heures normales/supplémentaires
     // (À adapter selon vos règles métiers)
@@ -229,18 +253,27 @@ async function createSyntheses(prisma: any, planningId: string, creneaux: any[])
     employeesMap.set(creneau.employeeId, employeeData);
   }
 
-  // Création des synthèses
+  // Préparation des données pour createMany (beaucoup plus rapide)
+  const syntheseData = [];
+  const periodeFrom = new Date(Math.min(...creneaux.map(c => new Date(c.dateDebut).getTime())));
+  const periodeTo = new Date(Math.max(...creneaux.map(c => new Date(c.dateFin).getTime())));
+
   for (const [employeeId, heures] of employeesMap) {
-    await prisma.syntheseHeures.create({
-      data: {
-        employee: { connect: { id: employeeId } },
-        planning: { connect: { id: planningId } },
-        periodeFrom: new Date(creneaux[0].dateDebut),
-        periodeTo: new Date(creneaux[0].dateFin),
-        heuresNormales: Math.round(heures.heuresNormales),
-        heuresSupplementaires: Math.round(heures.heuresSupplementaires),
-        statut: 'BROUILLON'
-      }
+    syntheseData.push({
+      employeeId: employeeId,
+      planningId: planningId,
+      periodeFrom: periodeFrom,
+      periodeTo: periodeTo,
+      heuresNormales: Math.round(heures.heuresNormales),
+      heuresSupplementaires: Math.round(heures.heuresSupplementaires),
+      statut: 'BROUILLON'
+    });
+  }
+
+  // Création en une seule requête (beaucoup plus rapide que la boucle)
+  if (syntheseData.length > 0) {
+    await prisma.syntheseHeures.createMany({
+      data: syntheseData
     });
   }
 }

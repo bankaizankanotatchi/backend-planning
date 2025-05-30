@@ -27,16 +27,16 @@ export async function GET(
     }
 
     // 2. Vérification des permissions
-    const isAdmin = decoded.permissions.includes('ALL_ACCESS');
-    const canViewAllTasks = decoded.permissions.includes('TASK_VIEW_ALL');
-    const canViewOwnTasks = decoded.permissions.includes('TASK_VIEW_OWN');
+    // const isAdmin = decoded.permissions.includes('ALL_ACCESS');
+    // const canViewAllTasks = decoded.permissions.includes('TASK_VIEW_ALL');
+    // const canViewOwnTasks = decoded.permissions.includes('TASK_VIEW_OWN');
 
-    if (!isAdmin && !canViewAllTasks && !canViewOwnTasks) {
-      return NextResponse.json(
-        { error: 'Permissions insuffisantes' },
-        { status: 403 }
-      );
-    }
+    // if (!isAdmin && !canViewAllTasks && !canViewOwnTasks) {
+    //   return NextResponse.json(
+    //     { error: 'Permissions insuffisantes' },
+    //     { status: 403 }
+    //   );
+    // }
 
     // 3. Validation de l'ID
     const taskId = id;
@@ -90,14 +90,14 @@ export async function GET(
 
     // 5. Vérification des droits d'accès
     const isOwner = task.employee.id === decoded.employeeId;
-    const canAccess = isAdmin || canViewAllTasks || (canViewOwnTasks && isOwner);
+    //const canAccess = isAdmin || canViewAllTasks || (canViewOwnTasks && isOwner);
 
-    if (!canAccess) {
-      return NextResponse.json(
-        { error: 'Accès non autorisé à cette tâche' },
-        { status: 403 }
-      );
-    }
+    // if (!canAccess) {
+    //   return NextResponse.json(
+    //     { error: 'Accès non autorisé à cette tâche' },
+    //     { status: 403 }
+    //   );
+    // }
 
     // 6. Formatage de la réponse
     const responseData = {

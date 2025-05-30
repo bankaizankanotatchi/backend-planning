@@ -61,6 +61,7 @@ export async function GET(request: Request) {
     const employee = await prisma.employee.findUnique({
       where: { id: employeeId , isActive: true},
       select: {
+        id: true,
         nom: true,
         prenom: true,
         email: true,

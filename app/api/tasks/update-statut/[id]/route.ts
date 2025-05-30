@@ -35,14 +35,14 @@ export async function PATCH(
     }
 
     // 2. Vérification des permissions
-    const canUpdateStatus = decoded.permissions.includes('TASK_UPDATE_STATUS') || 
-                          decoded.permissions.includes('ALL_ACCESS');
-    if (!canUpdateStatus) {
-      return NextResponse.json(
-        { error: 'Permissions insuffisantes pour modifier le statut des tâches' },
-        { status: 403 }
-      );
-    }
+    // const canUpdateStatus = decoded.permissions.includes('TASK_UPDATE_STATUS') || 
+    //                       decoded.permissions.includes('ALL_ACCESS');
+    // if (!canUpdateStatus) {
+    //   return NextResponse.json(
+    //     { error: 'Permissions insuffisantes pour modifier le statut des tâches' },
+    //     { status: 403 }
+    //   );
+    // }
 
     // 3. Validation de l'ID
     const taskId = id;

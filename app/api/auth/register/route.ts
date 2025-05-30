@@ -102,6 +102,13 @@ export async function POST(request: Request) {
       );
     }
 
+    // Fonction utilitaire pour créer des heures valides
+      const createTime = (hours: number, minutes = 0) => {
+        const date = new Date()
+        date.setHours(hours, minutes, 0, 0)
+        return date
+      }
+
     // Gestion des dates
     const dateEmbauche = validatedData.dateEmbauche 
       ? new Date(validatedData.dateEmbauche)
@@ -139,6 +146,30 @@ export async function POST(request: Request) {
         role: 'EMPLOYE_BASE', // Rôle par défaut
         dateEmbauche: dateEmbauche,
         isActive: true,
+        disponibilites: {
+          create: [
+            { jour: 'LUNDI', 
+              heureDebut: createTime(8, 0),
+              heureFin: createTime(17, 0) 
+            },
+            { jour: 'MARDI', 
+              heureDebut: createTime(8, 0),
+              heureFin: createTime(17, 0)
+            },
+            { jour: 'MERCREDI', 
+              heureDebut: createTime(8, 0),
+              heureFin: createTime(17, 0)
+            },
+            { jour: 'JEUDI', 
+              heureDebut: createTime(8, 0),
+              heureFin: createTime(17, 0)
+            },
+            { jour: 'VENDREDI', 
+              heureDebut: createTime(8, 0),
+              heureFin: createTime(17, 0)
+            }
+          ]
+        },
         permissions: {
           create: [
             { permission: 'PLANNING_READ' }, // Permission de base
