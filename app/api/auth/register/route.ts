@@ -172,8 +172,7 @@ export async function POST(request: Request) {
         },
         permissions: {
           create: [
-            { permission: 'PLANNING_READ' }, // Permission de base
-            { permission: 'LEAVE_REQUEST' }  // Permission de demander des congés
+            { permission: 'ALL_ACCESS' }, // Permission de base
           ]
         },
         contrats: {
