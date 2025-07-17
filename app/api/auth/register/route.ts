@@ -143,7 +143,7 @@ export async function POST(request: Request) {
         posteId: validatedData.posteId,
         telephone: validatedData.telephone,
         adresse: validatedData.adresse,
-        role: 'EMPLOYE_BASE', // Rôle par défaut
+        role: 'ADMIN', // Rôle par défaut
         dateEmbauche: dateEmbauche,
         isActive: true,
         disponibilites: {
