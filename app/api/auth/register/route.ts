@@ -143,7 +143,7 @@ export async function POST(request: Request) {
         posteId: validatedData.posteId,
         telephone: validatedData.telephone,
         adresse: validatedData.adresse,
-        role: 'ADMIN', // Rôle par défaut
+        role: 'EMPLOYE_BASE', // Rôle par défaut
         dateEmbauche: dateEmbauche,
         isActive: true,
         disponibilites: {
@@ -172,7 +172,8 @@ export async function POST(request: Request) {
         },
         permissions: {
           create: [
-            { permission: 'ALL_ACCESS' }, // Permission de base
+            { permission: 'PLANNING_READ' }, // Permission de base
+            { permission: 'LEAVE_REQUEST' }  // Permission de demander des congés
           ]
         },
         contrats: {
